@@ -342,15 +342,17 @@ function R(o,z,ex,dims,hit,pass){const wall=o.type==='poly'&&o.layer==='walls',c
  if(dims&&dimOn(o)&&(o.type==='poly'||o.type==='rect'||o.type==='tri'))s+=segLabels(shapePts(o),o.closed||o.type!=='poly',z,ex,wall?(o.th||15)/2+4:0);
  if(dims&&dimOn(o)&&o.type==='circle')s+=T(p[0][0],p[0][1],'R '+fmtL(dist(p[0],p[1])),12/z,ex?'#1F5FBF':'var(--c-blue)',0,z,ex);
  return s}
-function stampSvg(t,a,d,W,hb,fs){const hb0=fs*3.4;const x=a+fs*.8,ty=d+hb0*.38,by=d+hb0*.76,ink='#1E1A14';return '<g font-family="Noto Sans,Arial,sans-serif"><line x1="'+f1(a)+'" y1="'+f1(d)+'" x2="'+f1(a+W)+'" y2="'+f1(d)+'" stroke="'+ink+'" stroke-width="'+f1(fs*.1)+'"/><text x="'+f1(x)+'" y="'+f1(ty)+'" font-size="'+f1(fs*1.15)+'" font-weight="700" fill="'+ink+'">'+esc(t.name)+'</text><text x="'+f1(x)+'" y="'+f1(by)+'" font-size="'+f1(fs*.8)+'" fill="#566474">'+esc(t.floor)+' · '+esc(t.date)+'</text><text x="'+f1(a+W-fs*.8)+'" y="'+f1(ty)+'" font-size="'+f1(fs*.8)+'" fill="#566474" text-anchor="end">Студия расм</text>'+roomsSvg(t.rooms,a,d+hb0,W,fs)+'</g>'}
+function stampSvg(t,a,d,W,hb,fs){const hb0=fs*3.4;const x=a+fs*.8,ty=d+hb0*.38,by=d+hb0*.76,ink='#1E1A14';return '<g font-family="Noto Sans,Arial,sans-serif"><line x1="'+f1(a)+'" y1="'+f1(d)+'" x2="'+f1(a+W)+'" y2="'+f1(d)+'" stroke="'+ink+'" stroke-width="'+f1(fs*.1)+'"/><text x="'+f1(x)+'" y="'+f1(ty)+'" font-size="'+f1(fs*1.15)+'" font-weight="700" fill="'+ink+'">'+esc(t.name)+'</text><text x="'+f1(x)+'" y="'+f1(by)+'" font-size="'+f1(fs*.8)+'" fill="#566474">'+esc(t.floor)+' · '+esc(t.date)+(t.oc&&(t.oc.d||t.oc.w)?' · Дарҳо: '+t.oc.d+' · Тирезаҳо: '+t.oc.w:'')+'</text><text x="'+f1(a+W-fs*.8)+'" y="'+f1(ty)+'" font-size="'+f1(fs*.8)+'" fill="#566474" text-anchor="end">Студия расм</text>'+roomsSvg(t.rooms,a,d+hb0,W,fs)+'</g>'}
 function roomsSvg(r,a,y0,W,fs){if(!r||!r.length)return '';const L=r.concat([{name:'Ҷамъ',a:r.reduce((t,q)=>t+q.a,0),tot:1}]),cols=Math.min(3,Math.ceil(L.length/4)),rows=Math.ceil(L.length/cols),cw=(W-fs*1.6)/cols,rh=fs*1.25,ink='#1E1A14';let o='<line x1="'+f1(a+fs*.8)+'" y1="'+f1(y0-fs*.35)+'" x2="'+f1(a+W-fs*.8)+'" y2="'+f1(y0-fs*.35)+'" stroke="#C9D0D8" stroke-width="'+f1(fs*.06)+'"/>';L.forEach((q,i)=>{const c=Math.floor(i/rows),k=i%rows,x=a+fs*.8+c*cw,y=y0+fs*.6+k*rh;o+='<text x="'+f1(x)+'" y="'+f1(y)+'" font-size="'+f1(fs*.8)+'" fill="'+ink+'"'+(q.tot?' font-weight="700"':'')+'>'+esc(q.name)+'</text><text x="'+f1(x+cw-fs*.8)+'" y="'+f1(y)+'" font-size="'+f1(fs*.8)+'" fill="'+(q.tot?ink:'#566474')+'" text-anchor="end"'+(q.tot?' font-weight="700"':'')+'>'+fmtA(q.a)+'</text>'});return o}
+function openCount(L){let d=0,w=0,wa=0;L.forEach(o=>{if(o.type!=='sym')return;const k=o.kind||'';if(k.indexOf('door')===0)d++;else if(k.indexOf('window')===0){w++;const K=symK(o);wa+=SYM[k].w*K[0]*Math.max(SYM[k].h*K[1],0)*0}});return{d,w}}
+function openHTML(){const c=openCount(FO());if(!c.d&&!c.w)return '';return '<h2>Дарҳо ва тирезаҳо</h2>'+row('Дарҳо',c.d)+row('Тирезаҳо',c.w)}
 function roomsOf(objs){return objs.filter(q=>q.type==='area'&&q.pts&&q.pts.length>2).map(q=>({name:q.name||'Ҳуҷра',a:Math.abs(area2(q.pts))}))}
 function exportSVG(objs,layers,dims,stamp){const vis=objs.filter(o=>!(layers[o.layer]&&!layers[o.layer].vis));
  let a=1e9,b=1e9,c=-1e9,d=-1e9;vis.forEach(o=>{const q=bbox(o);a=Math.min(a,q[0]);b=Math.min(b,q[1]);c=Math.max(c,q[2]);d=Math.max(d,q[3])});
  if(!vis.length){a=b=0;c=d=400}
  const m=90;a-=m;b-=m;c+=m;d+=m;const W=c-a,H0=d-b,fs=Math.max(14,W/48),rm=stamp?roomsOf(vis):[],hb=stamp?fs*3.4+(rm.length?fs*.9+Math.ceil((rm.length+1)/Math.min(3,Math.ceil((rm.length+1)/4)))*fs*1.25:0):0,H=H0+hb,z=Math.min(1,1600/Math.max(W,H))*1,px=2;
  const body=LAYERS.map(l=>vis.filter(o=>o.layer===l.id).map(o=>R(o,px,true,dims,false,l.id==='walls'?'o':undefined)).join('')+(l.id==='walls'?vis.filter(o=>o.layer==='walls').map(o=>R(o,px,true,dims,false,'i')).join(''):'')).join('');
- return {svg:'<svg xmlns="http://www.w3.org/2000/svg" width="'+Math.round(W*px*z)+'" height="'+Math.round(H*px*z)+'" viewBox="'+f1(a)+' '+f1(b)+' '+f1(W)+' '+f1(H)+'"><rect x="'+f1(a)+'" y="'+f1(b)+'" width="'+f1(W)+'" height="'+f1(H)+'" fill="#fff"/>'+body+(stamp?stampSvg(Object.assign({},stamp,{rooms:rm}),a,d,W,hb,fs):'')+'</svg>',w:Math.round(W*px*z),h:Math.round(H*px*z),cw:W,ch:H}}
+ return {svg:'<svg xmlns="http://www.w3.org/2000/svg" width="'+Math.round(W*px*z)+'" height="'+Math.round(H*px*z)+'" viewBox="'+f1(a)+' '+f1(b)+' '+f1(W)+' '+f1(H)+'"><rect x="'+f1(a)+'" y="'+f1(b)+'" width="'+f1(W)+'" height="'+f1(H)+'" fill="#fff"/>'+body+(stamp?stampSvg(Object.assign({},stamp,{rooms:rm,oc:openCount(vis)}),a,d,W,hb,fs):'')+'</svg>',w:Math.round(W*px*z),h:Math.round(H*px*z),cw:W,ch:H}}
 /* ===== editor state ===== */
 let DB,P,objs=[],layers={},view={x:60,y:60,z:.5},hist=[],hi=-1,tool='select',sel=null,draft=null,cur=null,drag=null,gest=null,down=null,lastTap=null,spaceDown=false,panelOpen=false,ptab='props',saveT=0;
 const pointers=new Map();
@@ -400,7 +402,7 @@ function linkOpening(o){const S=SYM[o.kind],K=symK(o),r=(o.rot||0)*Math.PI/180,c
  const{a,b}=best,dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((c[0]-a[0])*dx+(c[1]-a[1])*dy)/l2)),base=segBase(a,b);
  const rel=((o.rot||0)-base),rr=((Math.round(rel/180)*180)%360+360)%360;
  o.at={id:best.w.id,i:best.i,t,rr};o.rot=(base+rr+360)%360;o.pts[0]=[Math.round((a[0]+t*dx)*10)/10,Math.round((a[1]+t*dy)*10)/10]}
-function relinkAll(){objs.forEach(o=>{if(!o.at||!isOpen(o))return;if(drag&&drag.kind==='m'&&o.id===sel)return;const q=objs.find(w=>w.id===o.at.id);if(!q||q.layer!=='walls')return;const n=q.pts.length,i=o.at.i;if(i>=n||(!q.closed&&i>=n-1))return;const a=q.pts[i],b=q.pts[(i+1)%n],base=segBase(a,b);o.pts[0]=[a[0]+o.at.t*(b[0]-a[0]),a[1]+o.at.t*(b[1]-a[1])];o.rot=(base+o.at.rr+360)%360})}
+function relinkAll(){objs.forEach(o=>{if(!o.at||!isOpen(o))return;if(drag&&((drag.kind==='m'&&o.id===sel)||(drag.kind==='mm'&&msel.has(o.id))))return;const q=objs.find(w=>w.id===o.at.id);if(!q||q.layer!=='walls')return;const n=q.pts.length,i=o.at.i;if(i>=n||(!q.closed&&i>=n-1))return;const a=q.pts[i],b=q.pts[(i+1)%n],base=segBase(a,b);o.pts[0]=[a[0]+o.at.t*(b[0]-a[0]),a[1]+o.at.t*(b[1]-a[1])];o.rot=(base+o.at.rr+360)%360})}
 function isRectLike(P0){if(P0.length!==4)return false;for(let i=0;i<4;i++){const a=P0[i],b=P0[(i+1)%4],c=P0[(i+2)%4];if(Math.abs((b[0]-a[0])*(c[0]-b[0])+(b[1]-a[1])*(c[1]-b[1]))>1)return false}return true}
 function setSeg(o,i,L){const P0=o.pts,n=P0.length,a=P0[i],b=P0[(i+1)%n],d=dist(a,b);if(d<.01||!(L>0))return false;const ux=(b[0]-a[0])/d,uy=(b[1]-a[1])/d,dl=L-d,r=v=>Math.round(v*10)/10,mv=j=>{P0[j]=[r(P0[j][0]+ux*dl),r(P0[j][1]+uy*dl)]};
  if(o.closed&&isRectLike(P0)){mv((i+1)%n);mv((i+2)%n)}else if(o.closed){mv((i+1)%n)}else{for(let j=i+1;j<n;j++)mv(j)}return true}
@@ -408,7 +410,8 @@ function segHTML(o){if(o.type!=='poly'||o.pts.length<2||o.pts.length>14)return '
 function renderWorld(){relinkAll();const z=view.z,dims=$('#o-dims').checked;
  $('#wo').innerHTML=LAYERS.map(l=>{const st=layers[l.id];if(!st||!st.vis)return '';return '<g '+(st.lock?'pointer-events="none"':'')+'>'+FO().filter(o=>o.layer===l.id).map(o=>'<g data-id="'+o.id+'">'+R(o,z,false,dims,true,l.id==='walls'?'o':undefined)+'</g>').join('')+(l.id==='walls'?'<g pointer-events="none">'+FO().filter(o=>o.layer==='walls').map(o=>R(o,z,false,dims,false,'i')).join('')+'</g>':'')+'</g>'}).join('');
  renderSel();updGrid();wt()}
-function renderSel(){const o=objs.find(q=>q.id===sel),z=view.z;if(!o){$('#ws').innerHTML='';return}
+function renderSel(){const z=view.z;if(multi){let s='';objs.forEach(o=>{if(!msel.has(o.id))return;const b=bbox(o),m=8/z;s+='<rect x="'+f1(b[0]-m)+'" y="'+f1(b[1]-m)+'" width="'+f1(b[2]-b[0]+2*m)+'" height="'+f1(b[3]-b[1]+2*m)+'" fill="var(--sel)" fill-opacity=".08" stroke="var(--sel)" stroke-width="'+1.5/z+'" stroke-dasharray="'+6/z+' '+4/z+'" pointer-events="none"/>'});$('#ws').innerHTML=s;return}
+ const o=objs.find(q=>q.id===sel);if(!o){$('#ws').innerHTML='';return}
  const b=bbox(o),m=8/z;let s='<rect x="'+f1(b[0]-m)+'" y="'+f1(b[1]-m)+'" width="'+f1(b[2]-b[0]+2*m)+'" height="'+f1(b[3]-b[1]+2*m)+'" fill="none" stroke="var(--sel)" stroke-width="'+1.5/z+'" stroke-dasharray="'+6/z+' '+4/z+'" pointer-events="none"/>';
  o.pts.forEach((p,i)=>{s+='<circle data-h="'+i+'" cx="'+f1(p[0])+'" cy="'+f1(p[1])+'" r="'+8/z+'" fill="var(--raised)" stroke="var(--sel)" stroke-width="'+2/z+'"/><circle data-h="'+i+'" cx="'+f1(p[0])+'" cy="'+f1(p[1])+'" r="'+22/z+'" fill="transparent"/>'});
  $('#ws').innerHTML=s}
@@ -419,6 +422,12 @@ function renderDraft(){const el=$('#wd'),z=view.z;let s='';
  else if(SYM[tool]&&cur)s+='<g opacity=".55">'+R(mk(tool,[cur]),z,false,false,false)+'</g>';
  if(cur&&tool!=='select'&&tool!=='pan')s+='<circle cx="'+f1(cur[0])+'" cy="'+f1(cur[1])+'" r="'+5/z+'" fill="none" stroke="var(--accent)" stroke-width="'+2/z+'"/>';
  el.innerHTML=s}
+let multi=false;const msel=new Set();
+function multiOn(){multi=true;msel.clear();if(sel)msel.add(sel);sel=null;renderSel();renderPanel();updHint()}
+function multiOff(){multi=false;const f=[...msel][0];msel.clear();sel=f&&objs.some(q=>q.id===f)?f:null;renderSel();renderPanel();updHint()}
+function multiDup(){const m={},cp=[];objs.filter(o=>msel.has(o.id)).forEach(o=>{const c=JSON.parse(JSON.stringify(o));c.id=uid();m[o.id]=c.id;c.pts=c.pts.map(p=>[p[0]+40,p[1]+40]);cp.push(c)});cp.forEach(c=>{if(c.at){if(m[c.at.id])c.at.id=m[c.at.id];else delete c.at}});objs.push(...cp);msel.clear();cp.forEach(c=>msel.add(c.id));changed(true)}
+function multiDel(){objs=objs.filter(o=>!msel.has(o.id));msel.clear();changed(true)}
+function multiHTML(){return '<h2>Якчанд объект</h2>'+row('Интихоб шуд',msel.size)+'<p style="margin:0 0 10px;font-size:13px;color:var(--muted)">Объектҳоро пахш кунед, то илова ё хориҷ шаванд. Яке аз интихобшударо кашед, ҳамааш якҷоя меравад.</p><div class="btns"><button class="btn" type="button" data-a="mdup">Нусха</button><button class="btn danger" type="button" data-a="mdel">Нест кардан</button></div><div class="btns" style="margin-top:8px"><button class="btn" type="button" data-a="mall">Ҳамаро интихоб</button><button class="btn primary" type="button" data-a="mdone">Анҷом</button></div>'}
 const LENT=['wall','poly','polygon','area','line','dim','arrow'];
 function addDraftPt(p){const t=draft.tool,n=NPTS[t];if(n==='n'){draft.pts.push(p);cur=null;updHint();renderDraft();return}draft.pts.push(p);if(draft.pts.length>=n){const o=mk(t,draft.pts.slice());objs.push(o);draft=null;sel=o.id;cur=null;changed(true)}else{updHint();renderDraft()}}
 function openLen(){if(!draft||!draft.pts.length)return;const k=draft.pts.length,f=draft.pts[k-1];let ang=0;if(k>1){const q=draft.pts[k-2];ang=Math.round(Math.atan2(-(f[1]-q[1]),f[0]-q[0])*180/Math.PI*10)/10}
@@ -426,7 +435,7 @@ function openLen(){if(!draft||!draft.pts.length)return;const k=draft.pts.length,
  const i=$('#len-v');i.focus();$('#len-x').onclick=closeModal;
  document.querySelectorAll('#len-form [data-ang]').forEach(b=>b.onclick=()=>{$('#len-a').value=b.dataset.ang});
  $('#len-form').onsubmit=e=>{e.preventDefault();const L=+$('#len-v').value,A=(+$('#len-a').value||0)*Math.PI/180;if(!(L>0)||!draft)return;const fr=draft.pts[draft.pts.length-1],p=[Math.round((fr[0]+Math.cos(A)*L*100)*10)/10,Math.round((fr[1]-Math.sin(A)*L*100)*10)/10];closeModal();addDraftPt(p)}}
-function updHint(){const h=$('#hint');let m='',b='';
+function updHint(){const h=$('#hint');let m='',b='';if(tool!=='select'&&multi){multi=false;msel.clear()}
  if(draft){const n=NPTS[draft.tool],k=draft.pts.length,min=DEF[draft.tool].closed||draft.tool==='area'?3:2;
   m=NAME[draft.tool]+': '+(MSG[n]||MSG.n)[Math.min(k,(MSG[n]||MSG.n).length-1)];
   if(k>=1&&LENT.includes(draft.tool))b+='<button class="btn" type="button" data-a="len">Дарозӣ</button>';
@@ -435,7 +444,8 @@ function updHint(){const h=$('#hint');let m='',b='';
  else if(SYM[tool])m=SYM[tool].n+': ҷойро пахш кунед';
  else if(tool==='erase')m='Объектро пахш кунед, то хориҷ шавад';
  else if(tool==='pan')m='Экранро кашед';
- else if(tool==='select'&&canDim(curObj())){const o=curObj();m='Объект интихоб шуд';b='<button class="btn primary" type="button" data-a="dim">'+(dimOn(o)?'Андозаро пинҳон':'Андоза илова кардан')+'</button>'}
+ else if(tool==='select'&&multi){m='Интихоб шуд: '+msel.size;b='<button class="btn" type="button" data-a="mdup">Нусха</button><button class="btn danger" type="button" data-a="mdel">Нест</button><button class="btn primary" type="button" data-a="mdone">Анҷом</button>'}
+ else if(tool==='select'&&curObj()){const o=curObj();m='Объект интихоб шуд';b='<button class="btn" type="button" data-a="multi">Якчанд</button>'+(canDim(o)?'<button class="btn primary" type="button" data-a="dim">'+(dimOn(o)?'Андозаро пинҳон':'Андоза илова кардан')+'</button>':'')}
  h.hidden=!m;h.innerHTML=m?'<span class="msg">'+m+'</span><span class="hb">'+b+'</span>':''}
 /* ===== drawing ===== */
 function minPts(t){return DEF[t].closed||t==='area'?3:2}
@@ -467,6 +477,7 @@ svg.addEventListener('pointerdown',e=>{
  const w=toWorld(e);down={x:e.clientX,y:e.clientY,w:w,t:Date.now(),moved:false};
  if(e.button===1||e.button===2||spaceDown||tool==='pan'){startPan(e);return}
  if(tool==='select'){
+  if(multi){const id=pickId(e);if(id){const was=msel.has(id);if(!was)msel.add(id);drag={kind:'mm',start:w,was,id,orig:JSON.stringify(objs.filter(o=>msel.has(o.id)).map(o=>[o.id,o.pts]))};renderSel();renderPanel();updHint()}else startPan(e);return}
   const h=e.target.closest&&e.target.closest('[data-h]');
   if(h&&sel){const o=objs.find(q=>q.id===sel);drag={kind:'h',i:+h.getAttribute('data-h'),orig:JSON.stringify(o.pts)};return}
   const id=pickId(e);
@@ -485,6 +496,7 @@ svg.addEventListener('pointermove',e=>{
  if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)down.moved=true;
  if(drag){
   if(drag.kind==='pan'){view={x:drag.vx+e.clientX-drag.sx,y:drag.vy+e.clientY-drag.sy,z:view.z};renderWorld();renderDraft();return}
+  if(drag.kind==='mm'){if(down.moved){let dx=w[0]-drag.start[0],dy=w[1]-drag.start[1];if($('#o-snap').checked){dx=Math.round(dx/10)*10;dy=Math.round(dy/10)*10}JSON.parse(drag.orig).forEach(([id,pts])=>{const q=objs.find(o=>o.id===id);if(q)q.pts=pts.map(p=>[p[0]+dx,p[1]+dy])});renderWorld();renderSel()}return}
   const o=objs.find(q=>q.id===sel);if(!o)return;
   if(drag.kind==='m'&&down.moved){let dx=w[0]-drag.start[0],dy=w[1]-drag.start[1];if($('#o-snap').checked){dx=Math.round(dx/10)*10;dy=Math.round(dy/10)*10}
    const op=JSON.parse(drag.orig);o.pts=op.map(p=>[p[0]+dx,p[1]+dy]);renderWorld();return}
@@ -498,6 +510,7 @@ function endPtr(e){
  if(!had)return;
  const w=toWorld(e);
  if(drag){const dd=drag;drag=null;
+  if(dd.kind==='mm'){if(down.moved){objs.forEach(o=>{if(msel.has(o.id)&&isOpen(o)){const wm=o.at&&msel.has(o.at.id);if(!wm)linkOpening(o)}});changed(true)}else if(dd.was){msel.delete(dd.id);renderSel();renderPanel();updHint()}return}
   if(dd.kind==='pan'){schedSave();if(tool==='select'&&!down.moved&&!sel)renderPanel();return}
   if((dd.kind==='m'&&down.moved)||(dd.kind==='h'&&dd.moved)){const so=objs.find(q=>q.id===sel);if(dd.kind==='m'&&isOpen(so))linkOpening(so);changed(true)}return}
  if(!down)return;
@@ -513,7 +526,7 @@ svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',en
 svg.addEventListener('contextmenu',e=>e.preventDefault());
 svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)))},{passive:false});
 svg.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!draft){cur=null;renderDraft()}});
-$('#hint').addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='len'){openLen();return}if(a.dataset.a==='dim'){const o=curObj();if(o)toggleDim(o);return}a.dataset.a==='finish'?finish(false):cancel()});
+$('#hint').addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='len'){openLen();return}if(a.dataset.a==='multi'){multiOn();return}if(a.dataset.a==='mdup'){multiDup();return}if(a.dataset.a==='mdel'){multiDel();return}if(a.dataset.a==='mdone'){multiOff();return}if(a.dataset.a==='mall'){FO().forEach(o=>msel.add(o.id));renderSel();renderPanel();updHint();return}if(a.dataset.a==='dim'){const o=curObj();if(o)toggleDim(o);return}a.dataset.a==='finish'?finish(false):cancel()});
 $('#tin').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitText(true)}else if(e.key==='Escape')commitText(false)});
 $('#tin').addEventListener('blur',()=>commitText(true));
 document.addEventListener('keydown',e=>{if($('#v-editor').hidden)return;const tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'){return}
@@ -521,6 +534,7 @@ document.addEventListener('keydown',e=>{if($('#v-editor').hidden)return;const tg
  if(k===' '){spaceDown=true;e.preventDefault()}
  else if(k==='Enter'&&draft)finish(false);
  else if(k==='Escape'){if(draft)cancel();else{sel=null;tool='select';buildTools();renderSel();renderPanel();updHint()}}
+ else if((k==='Delete'||k==='Backspace')&&multi&&msel.size){multiDel();e.preventDefault()}
  else if((k==='Delete'||k==='Backspace')&&sel){objs=objs.filter(o=>o.id!==sel);sel=null;changed(true);e.preventDefault()}
  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='z'){undo(e.shiftKey?1:-1);e.preventDefault()}
  else if((e.ctrlKey||e.metaKey)&&k.toLowerCase()==='y'){undo(1);e.preventDefault()}
@@ -553,9 +567,9 @@ const row=(a,b)=>'<div class="row"><span>'+a+'</span><b>'+b+'</b></div>';
 const chk=(id,t,on)=>'<label class="chk"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'>'+t+'</label>';
 function syncPanel(){$('#panel').hidden=GM()?!panelOpen:false}
 function roomsHTML(){const r=FO().filter(q=>q.type==='area'&&q.pts.length>2);return r.length?'<h2>Ҳуҷраҳо</h2>'+r.map(q=>row(esc(q.name||'Ҳуҷра'),fmtA(area2(q.pts)))).join('')+row('Ҷамъ',fmtA(r.reduce((t,q)=>t+area2(q.pts),0))):''}
-function propsHTML(){const o=objs.find(q=>q.id===sel);
+function propsHTML(){if(multi)return multiHTML();const o=objs.find(q=>q.id===sel);
  if(!o){let wl=0,ar=0;objs.forEach(q=>{if(q.layer==='walls'&&q.type==='poly'){wl+=polyLen(q.pts,q.closed);if(q.closed)ar+=Math.abs(area2(q.pts))}});
-  return '<h2>Лоиҳа</h2>'+row('Объектҳо',objs.length)+row('Дарозии деворҳо',fmtL(wl))+row('Масоҳати деворҳо',fmtA(ar))+roomsHTML()+'<div class="btns" style="margin:10px 0"><button class="btn" id="p-hist" type="button">Таърихи нусхаҳо</button></div><p style="margin:0;font-size:13px;color:var(--muted)">Объектро пахш кунед, то хосиятҳояш намоён шаванд. Бо ду ангушт калон ва ҷойивазкунӣ мешавад. Del хориҷ мекунад, Ctrl+Z бекор мекунад.</p>'}
+  return '<h2>Лоиҳа</h2>'+row('Объектҳо',objs.length)+row('Дарозии деворҳо',fmtL(wl))+row('Масоҳати деворҳо',fmtA(ar))+roomsHTML()+openHTML()+'<div class="btns" style="margin:10px 0"><button class="btn" id="p-hist" type="button">Таърихи нусхаҳо</button></div><p style="margin:0;font-size:13px;color:var(--muted)">Объектро пахш кунед, то хосиятҳояш намоён шаванд. Бо ду ангушт калон ва ҷойивазкунӣ мешавад. Del хориҷ мекунад, Ctrl+Z бекор мекунад.</p>'}
  const m=measureOf(o);let h='<h2>'+esc(typeName(o))+'</h2>';
  if(m.l)h+=row(o.type==='poly'&&!o.closed?'Дарозӣ':'Дарозӣ / периметр',fmtL(m.l));if(m.a)h+=row('Масоҳат',fmtA(m.a));
  if((o.type==='poly'&&o.pts.length===2)||o.type==='dim'||o.type==='arrow')h+='<label class="fld">Дарозӣ (м)<input id="p-len" type="number" min="0.01" step="0.01" value="'+(dist(o.pts[0],o.pts[1])/100).toFixed(2)+'"></label>';
