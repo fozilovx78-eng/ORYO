@@ -72,7 +72,7 @@ button,summary{cursor:pointer}
 .pv-head .ttl{display:flex;align-items:center;gap:12px;min-width:0}
 .pv-head h1{margin:0;font-size:24px;line-height:30px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
 .pv-head p{margin:0;font-size:13px;color:var(--muted)}
-.pv-body{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.pv-body{max-width:1080px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .search{width:100%;height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--raised);color:var(--ink)}
 .search{border:2px solid var(--muted);border-radius:12px;box-sizing:border-box}
 .search:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
@@ -1424,7 +1424,7 @@ if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=100;
+const APP_V=101;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
