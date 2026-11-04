@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body::before{content:'';position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:99998;pointer-events:none}body:has(#v-editor:not([hidden]))::before{background:var(--chrome)}</style>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body::before{content:'';position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:99998;pointer-events:none}body:has(#v-editor:not([hidden]))::before{background:var(--chrome)}html:has(#v-editor:not([hidden])){background:var(--chrome)}</style>
 <title>ORYO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -376,7 +376,7 @@ button,.tb,.sbtn{touch-action:manipulation}
 var WM=(()=>{try{return localStorage.getItem('studio-rasm-wm')||'fix'}catch(e){return 'fix'}})();
 var THM=(()=>{try{return localStorage.getItem('studio-rasm-theme')||'auto'}catch(e){return 'auto'}})();
 function applyTheme(){const r=document.documentElement;if(THM==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',THM);
- const dk=THM==='dark'||(THM==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches),m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',dk?'#18212A':'#FFFFFF');
+ const dk=THM==='dark'||(THM==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches),m=document.querySelector('meta[name=theme-color]'),ed=document.getElementById('v-editor'),inEd=ed&&!ed.hidden;if(m)m.setAttribute('content',inEd?(dk?'#18212A':'#FFFFFF'):(dk?'#0F151B':'#EDF0F4'));
  document.querySelectorAll('[data-th]').forEach(b=>b.classList.toggle('on',b.dataset.th===THM));document.querySelectorAll('[data-wm]').forEach(b=>b.classList.toggle('on',b.dataset.wm===WM))}
 applyTheme();
 var curFloor=0;const FO=()=>objs.filter(o=>(o.fl||0)===curFloor);const $=s=>document.querySelector(s);
@@ -1346,10 +1346,10 @@ $('#np-cancel').addEventListener('click',()=>$('#np-form').hidden=true);
 $('#np-form').addEventListener('submit',e=>{e.preventDefault();const p=newProject($('#np-name').value.trim(),$('#np-tpl').value,Math.min(100,Math.max(1,+$('#np-w').value||6)),Math.min(100,Math.max(1,+$('#np-h').value||4)));
  DB.projects.push(p);DB.current=p.id;saveDB(DB);$('#np-form').hidden=true;location.hash='editor';route()});
 /* ===== editor open / routing ===== */
-function showProjects(){if(P&&!$('#v-editor').hidden){clearTimeout(saveT);persist()}commitText(false);closeMenu();$('#v-editor').hidden=true;$('#v-projects').hidden=false;renderProjects();document.title='ORYO'}
+function showProjects(){if(P&&!$('#v-editor').hidden){clearTimeout(saveT);persist()}commitText(false);closeMenu();$('#v-editor').hidden=true;$('#v-projects').hidden=false;renderProjects();document.title='ORYO';applyTheme()}
 function openEditor(){P=DB.projects.find(p=>p.id===DB.current);if(!P){location.hash='projects';return}
  objs=P.objs;layers=Object.assign(defLayers(),P.layers||{});P.layers=layers;sel=null;draft=null;cur=null;tool='select';hist=[JSON.stringify(objs)];hi=0;ptab='props';panelOpen=false;curFloor=0;P.floors=P.floors||['Ошёнаи 1'];fillFloors();
- $('#v-projects').hidden=true;$('#v-editor').hidden=false;$('#pname').value=P.name;document.title=P.name+' · ORYO';
+ $('#v-projects').hidden=true;$('#v-editor').hidden=false;$('#pname').value=P.name;document.title=P.name+' · ORYO';applyTheme();
  buildTools();syncPanel();updUndo();requestAnimationFrame(()=>{if(P.view&&P.view.z)view=P.view;else fit();renderWorld();renderPanel();updHint()})}
 function route(){if(AUTH_ON()&&!loggedIn()){showAuth();return}const h=location.hash.slice(1);if(h==='editor'&&DB.current&&DB.projects.some(p=>p.id===DB.current))openEditor();else showProjects()}
 window.addEventListener('hashchange',route);
@@ -1397,7 +1397,7 @@ function authSet(m){AMODE=m;const a=getAcct(),V=(id,on)=>{$(id).hidden=!on};
  else if(m==='reset'){a1.textContent='Бозгашт';a1.dataset.m='login';a2.textContent='Рамз нест';a2.dataset.m='wipe'}
  else{a1.hidden=true;a2.hidden=true}
  if(a&&m==='login')$('#au-email').value=a.email||''}
-function showAuth(){$('#v-projects').hidden=true;$('#v-editor').hidden=true;$('#v-auth').hidden=false;authSet(getAcct()?'login':'new');document.title='ORYO'}
+function showAuth(){$('#v-projects').hidden=true;$('#v-editor').hidden=true;$('#v-auth').hidden=false;authSet(getAcct()?'login':'new');document.title='ORYO';applyTheme()}
 function authErr(t){const e=$('#au-err');e.textContent=t;e.hidden=false}
 function authDone(rem){try{sessionStorage.setItem(AS,'1');if(rem)localStorage.setItem(AS,'1');else localStorage.removeItem(AS)}catch(e){}$('#v-auth').hidden=true;authInfo();route()}
 function authInfo(){const a=getAcct(),on=AUTH_ON()&&a;$('#sg-acc').hidden=!on;if(on)$('#acc-l').textContent=a.email}
@@ -1420,7 +1420,7 @@ if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=98;
+const APP_V=99;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
