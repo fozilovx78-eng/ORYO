@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body::before{content:'';position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:99998;pointer-events:none}body:has(#v-editor:not([hidden]))::before{background:var(--chrome)}</style>
 <title>ORYO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,6 +53,7 @@ button,summary{cursor:pointer}
 .ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .v3h{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;padding:10px var(--gxr) 10px var(--gx);padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--chrome);border-bottom:1px solid var(--line);z-index:2}
 .v3h .sp{flex:1}.v3t{font-size:12.5px;color:var(--muted)}
+@media (max-width:640px){.v3l{display:none}.v3h{gap:6px}.v3h b{font-size:15px;white-space:nowrap}.v3t{display:none}.v3h .btn{padding:0 10px;font-size:13px;white-space:nowrap;min-height:40px}}
 @media (max-width:640px){.v3t{display:none}}
 #v3{position:fixed;inset:0;z-index:80;background:var(--surface);color:var(--ink)}
 .v3img{position:absolute;inset:0;z-index:5;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:12px;padding:70px 16px 16px;overflow:auto}
@@ -319,7 +320,7 @@ button,.tb,.sbtn{touch-action:manipulation}
   </div>
 </section>
 <section id="v-projects" class="view pv" aria-label="Лоиҳаҳо">
-  <div class="pv-head"><div class="ttl"><svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#EF7530"/><path d="M130 140H382V268H300V380H130Z" fill="none" stroke="#14110D" stroke-width="34" stroke-linejoin="round"/></svg><div><h1>ORYO</h1><p>Нақша ва схемаҳо бо андозаҳои дақиқ</p></div></div><button class="btn" id="np-import" type="button">Воридкунӣ</button><input id="np-file" type="file" accept=".json,application/json" hidden><button class="btn primary" id="np-open" type="button">+ Лоиҳаи нав</button></div>
+  <div class="pv-head"><div class="ttl"><svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#EF7530"/><path d="M130 140H382V268H300V380H130Z" fill="none" stroke="#14110D" stroke-width="34" stroke-linejoin="round"/></svg><div><h1>ORYO</h1><p>Нақша ва схемаҳо бо андозаҳои дақиқ</p></div></div><button class="btn" id="np-backup" type="button">Захира</button><button class="btn" id="np-import" type="button">Воридкунӣ</button><input id="np-file" type="file" accept=".json,application/json" hidden><button class="btn primary" id="np-open" type="button">+ Лоиҳаи нав</button></div>
   <div class="pv-body">
     <form class="form" id="np-form" hidden>
       <label>Номи лоиҳа<input id="np-name" value="Хонаи нав" maxlength="60"></label>
@@ -1042,7 +1043,7 @@ let V3=null;
 function open3D(){
  const old=$('#v3');if(old)old.remove();
  const el=document.createElement('div');el.id='v3';
- el.innerHTML='<div class="v3h"><b>Намои 3D</b><span class="v3t">Давр занед · ду ангушт: калон кунед</span><span class="sp"></span><button type="button" class="btn" id="v3r">Аз нав</button><button type="button" class="btn" id="v3p">Акс</button><button type="button" class="btn primary" id="v3x">Пӯшидан</button></div><canvas id="v3c"></canvas>';
+ el.innerHTML='<div class="v3h"><b><span class="v3l">Намои </span>3D</b><span class="v3t">Давр занед · ду ангушт: калон кунед</span><span class="sp"></span><button type="button" class="btn" id="v3w">'+'<span class="v3l">Девор: </span>'+(window.V3CAP?'паст':'пурра')+'</button><button type="button" class="btn" id="v3r">Аз нав</button><button type="button" class="btn" id="v3p">Акс</button><button type="button" class="btn primary" id="v3x">Пӯшидан</button></div><canvas id="v3c"></canvas>';
  document.body.appendChild(el);
  const cv=$('#v3c'),cx=cv.getContext('2d');
  const cs=getComputedStyle(document.documentElement),bg=cs.getPropertyValue('--surface').trim()||'#fff',ink=cs.getPropertyValue('--ink').trim()||'#111',dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
@@ -1078,7 +1079,7 @@ function open3D(){
  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;const ext=p=>{minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);miny=Math.min(miny,p[1]);maxy=Math.max(maxy,p[1])};
  const floors=[];
  O.forEach(o=>{
-  if(o.type==='poly'&&o.layer==='walls'){o.pts.forEach(ext);const t=o.th||TH,h=t/2,n=o.pts.length,m=o.closed?n:n-1,Q=o.pts,WH=o.wh||270;
+  if(o.type==='poly'&&o.layer==='walls'){o.pts.forEach(ext);const t=o.th||TH,h=t/2,n=o.pts.length,m=o.closed?n:n-1,Q=o.pts,WH=window.V3CAP?Math.min(o.wh||270,window.V3CAP):(o.wh||270);
    if(o.closed&&n>2)floors.push({p:o.pts});
    const dirv=i=>{const a=Q[i%n],b=Q[(i+1)%n],L=dist(a,b)||1;return [(b[0]-a[0])/L,(b[1]-a[1])/L]};
    const cornerAt=(v,sg)=>{const a=(v-1+n)%n,b=v%n,ua=dirv(a),ub=dirv(b),P0=Q[b],pa=[P0[0]+(-ua[1])*h*sg,P0[1]+ua[0]*h*sg],pb=[P0[0]+(-ub[1])*h*sg,P0[1]+ub[0]*h*sg],cr=ua[0]*ub[1]-ua[1]*ub[0];
@@ -1092,7 +1093,7 @@ function open3D(){
     const seg=(sa,sb,z0,z1,rgb,al)=>{if(sb-sa<.5||z1-z0<.5)return;const n2=Math.max(1,Math.ceil((sb-sa)/120)),st=(sb-sa)/n2;for(let k=0;k<n2;k++){const f1_=(sa+k*st)/L,f2_=(sa+(k+1)*st)/L,P=[lp(Ls,Le,f1_),lp(Ls,Le,f2_),lp(Rs,Re,f2_),lp(Rs,Re,f1_)];
      const e0=k===0?(sa>0.5||!jS):false,e1=k===n2-1?(sb<L-.5||!jE):false;addBox(P,z0,z1,rgb,al,[e0,e1])}};
     const WC=(o.color&&o.color!=='ink')?mixW(hex2(colorHex(o.color)),dark?.1:.55):dark?[170,180,190]:[222,226,231];let pos=0;
-    ops.forEach(q=>{seg(pos,q.a,0,WH,WC);const win=/^window/.test(q.k),z0=win?90:0,z1=q.k==='arch'?230:win?210:q.k==='gate'?220:210;if(win)seg(q.a,q.b,0,z0,WC);seg(q.a,q.b,z1,WH,WC);detail3(q,a,ux,uy,nx,ny,t,z0,z1,win);pos=q.b});
+    ops.forEach(q=>{seg(pos,q.a,0,WH,WC);const win=/^window/.test(q.k),z0=win?90:0,z1=Math.min(WH,q.k==='arch'?230:win?210:q.k==='gate'?220:210);if(win)seg(q.a,q.b,0,z0,WC);seg(q.a,q.b,z1,WH,WC);detail3(q,a,ux,uy,nx,ny,t,z0,z1,win);pos=q.b});
     seg(pos,L,0,WH,WC)}}
   else if(o.type==='area'&&o.pts.length>2){o.pts.forEach(ext);floors.push({p:o.pts,fm:o.fm,nm:o.name,rgb:(o.fm==='wood'&&!(o.color&&o.color!=='green'))?(dark?[120,92,66]:[214,176,132]):(o.fm==='tile'&&!(o.color&&o.color!=='green'))?(dark?[92,104,116]:[226,230,234]):(o.color&&o.color!=='green')?mixW(hex2(colorHex(o.color)),dark?.0:.7):null})}
   else if(o.type==='sym'&&!isOpen(o)&&(o.layer==='furniture'||o.kind==='column')){const S=SYM[o.kind],L=symLoc(o),r=(o.rot||0)*Math.PI/180,c=Math.cos(r),s=Math.sin(r),p=o.pts[0];
@@ -1202,7 +1203,7 @@ function open3D(){
  cv.addEventListener('dblclick',reset);
  const close=()=>{el.remove();window.removeEventListener('resize',draw);document.removeEventListener('keydown',kd)};
  const kd=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',kd);
- $('#v3x').onclick=close;$('#v3r').onclick=reset;
+ $('#v3x').onclick=close;$('#v3r').onclick=reset;$('#v3w').onclick=()=>{window.V3CAP=window.V3CAP?null:100;open3D()};
  $('#v3p').onclick=async()=>{draw();const bl=await new Promise(r=>cv.toBlob(r,'image/png'));if(!bl){toast('Акс сохта нашуд');return}const name=slug()+'-3d.png';
   if(navigator.canShare&&matchMedia('(pointer:coarse)').matches){try{const f=new File([bl],name,{type:'image/png'});if(navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}}
   const ok=await saveFile(name,bl);if(!ok){const u=URL.createObjectURL(bl);const m=document.createElement('div');m.className='v3img';m.innerHTML='<img alt="Намои 3D" src="'+u+'"><p>Акси дарозро нигоҳ доред ва «Захира» -ро интихоб кунед</p><button type="button" class="btn primary">Пӯшидан</button>';m.querySelector('button').onclick=()=>m.remove();el.appendChild(m)}};window.addEventListener('resize',draw);
@@ -1323,9 +1324,14 @@ $('#plist').addEventListener('click',e=>{const a=e.target.closest('[data-open]')
   $('#del-ok').onclick=()=>{DB.projects=DB.projects.filter(y=>y.id!==p.id);saveDB(DB);closeModal();renderProjects()}}});
 $('#q').addEventListener('input',renderProjects);
 $('#np-import').addEventListener('click',()=>$('#np-file').click());
+$('#np-backup').addEventListener('click',()=>{try{if(P&&!$('#v-editor').hidden){persist()}const data=JSON.stringify({app:'oryo-backup',v:1,date:new Date().toISOString(),projects:DB.projects},null,1),bl=new Blob([data],{type:'application/json'}),nm='oryo-zakhira-'+new Date().toISOString().slice(0,10)+'.json';
+ const done=ok=>{if(!ok){const u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}toast('Захираи '+DB.projects.length+' лоиҳа омода шуд')};
+ if(DL){saveFile(nm,bl).then(done)}else done(false)}catch(e){toast('Захира нашуд')}});
 $('#np-file').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();
  fr.onerror=()=>toast('Файл хонда нашуд');
- fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d||!Array.isArray(d.objs))throw 0;
+ fr.onload=()=>{try{const d=JSON.parse(fr.result);
+  if(d&&d.app==='oryo-backup'&&Array.isArray(d.projects)){let n=0;d.projects.forEach(q=>{if(!q||!Array.isArray(q.objs))return;const c=JSON.parse(JSON.stringify(q));c.id=uid();c.updated=Date.now();c.name=String(c.name||'Лоиҳа').slice(0,60);c.layers=Object.assign(defLayers(),c.layers&&typeof c.layers==='object'?c.layers:{});c.floors=Array.isArray(c.floors)&&c.floors.length?c.floors:['Ошёнаи 1'];c.objs=c.objs.filter(o=>o&&typeof o==='object'&&Array.isArray(o.pts));c.objs.forEach(o=>{if(!o.id)o.id=uid()});DB.projects.push(c);n++});if(!n)throw 0;saveDB(DB);renderProjects();toast('Лоиҳаҳо ворид шуданд: '+n);return}
+  if(!d||!Array.isArray(d.objs))throw 0;
   const ok=d.objs.filter(o=>o&&typeof o==='object'&&Array.isArray(o.pts)&&o.pts.every(p=>Array.isArray(p)&&p.length>=2&&isFinite(p[0])&&isFinite(p[1]))&&(o.type==='sym'?!!SYM[o.kind]:true));
   if(!ok.length&&d.objs.length)throw 0;
   ok.forEach(o=>{if(!o.id)o.id=uid()});
@@ -1414,7 +1420,7 @@ if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=95;
+const APP_V=98;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
