@@ -302,6 +302,22 @@ button,.tb,.sbtn{touch-action:manipulation}
 <body>
 <noscript>Барои кор кардани «ORYO» JavaScript лозим аст.</noscript>
 <div id="app">
+<section id="v-auth" class="view pv" hidden aria-label="Воридшавӣ">
+  <div class="pv-body" style="max-width:420px;margin:0 auto;width:100%">
+    <div class="ttl" style="margin:8px 0 18px;display:flex;align-items:center;gap:12px"><svg class="mark" viewBox="0 0 512 512" aria-hidden="true" style="width:48px;height:48px"><rect width="512" height="512" rx="112" fill="#EF7530"/><path d="M130 140H382V268H300V380H130Z" fill="none" stroke="#14110D" stroke-width="34" stroke-linejoin="round"/></svg><div><h1 style="margin:0">ORYO</h1><p id="au-sub" style="margin:2px 0 0;color:var(--muted);font-size:14px"></p></div></div>
+    <form class="form" id="au-form" novalidate style="grid-template-columns:1fr">
+      <label id="au-l-email">Почтаи электронӣ<input id="au-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="name@mail.com"></label>
+      <label id="au-l-code">Рамзи барқарорӣ<input id="au-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX"></label>
+      <label id="au-l-pw"><span id="au-pwl">Парол</span><input id="au-pw" type="password" autocomplete="current-password"></label>
+      <label id="au-l-pw2">Парорро такроран нависед<input id="au-pw2" type="password" autocomplete="new-password"></label>
+      <label id="au-l-rem" style="flex-direction:row;align-items:center;gap:8px"><input id="au-rem" type="checkbox" checked style="width:20px;height:20px"> Дар ин дастгоҳ дар хотир нигоҳ дор</label>
+      <p id="au-err" role="alert" style="margin:0;color:#B3261E;font-size:14px" hidden></p>
+      <button class="btn primary" id="au-go" type="submit" style="width:100%;min-height:48px"></button>
+      <div class="full" style="justify-content:space-between"><button class="btn" id="au-alt1" type="button"></button><button class="btn" id="au-alt2" type="button"></button></div>
+    </form>
+    <p style="color:var(--muted);font-size:13px;margin:12px 4px">Ҳисоб танҳо дар ҳамин дастгоҳ нигоҳ дошта мешавад (сервер нест). Рамзи барқарорӣ барои тағйири парол лозим аст.</p>
+  </div>
+</section>
 <section id="v-projects" class="view pv" aria-label="Лоиҳаҳо">
   <div class="pv-head"><div class="ttl"><svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#EF7530"/><path d="M130 140H382V268H300V380H130Z" fill="none" stroke="#14110D" stroke-width="34" stroke-linejoin="round"/></svg><div><h1>ORYO</h1><p>Нақша ва схемаҳо бо андозаҳои дақиқ</p></div></div><button class="btn" id="np-import" type="button">Воридкунӣ</button><input id="np-file" type="file" accept=".json,application/json" hidden><button class="btn primary" id="np-open" type="button">+ Лоиҳаи нав</button></div>
   <div class="pv-body">
@@ -346,6 +362,7 @@ button,.tb,.sbtn{touch-action:manipulation}
     <div class="sg"><label class="chk"><input type="checkbox" id="o-snap" checked><span class="lf">Часпидан</span><span class="ls">Часп</span></label><label class="chk"><input type="checkbox" id="o-ortho" checked><span class="lf">Кунҷи 90°</span><span class="ls">90°</span></label><label class="chk"><input type="checkbox" id="o-dims" checked><span class="lf">Андозаҳо</span><span class="ls">Андоза</span></label></div>
     <div class="sg thm"><span class="thl">Намуд</span><div class="thb" role="group" aria-label="Намуд"><button type="button" data-th="auto">Худкор</button><button type="button" data-th="light">Равшан</button><button type="button" data-th="dark">Торик</button></div></div>
     <div class="sg thm"><span class="thl">Ғафсии девор</span><div class="thb" role="group" aria-label="Ғафсии девор"><button type="button" data-wm="fix">Собит</button><button type="button" data-wm="real">Воқеӣ</button></div></div>
+    <div class="sg thm" id="sg-acc" hidden><span class="thl" id="acc-l" style="overflow:hidden;text-overflow:ellipsis;max-width:55%">Ҳисоб</span><div class="thb"><button type="button" id="b-logout">Баромад</button></div></div>
     <div class="sg thm" id="sg-ver" hidden><span class="thl" id="ver-l">Версия</span><div class="thb"><button type="button" id="b-upd">Нав кардан</button></div></div>
     <span class="sp"></span><span id="st-save">Захира шуд</span><button class="btn primary" type="button" id="st-close" style="width:100%">Тайёр</button>
   </footer>
@@ -1328,7 +1345,7 @@ function openEditor(){P=DB.projects.find(p=>p.id===DB.current);if(!P){location.h
  objs=P.objs;layers=Object.assign(defLayers(),P.layers||{});P.layers=layers;sel=null;draft=null;cur=null;tool='select';hist=[JSON.stringify(objs)];hi=0;ptab='props';panelOpen=false;curFloor=0;P.floors=P.floors||['Ошёнаи 1'];fillFloors();
  $('#v-projects').hidden=true;$('#v-editor').hidden=false;$('#pname').value=P.name;document.title=P.name+' · ORYO';
  buildTools();syncPanel();updUndo();requestAnimationFrame(()=>{if(P.view&&P.view.z)view=P.view;else fit();renderWorld();renderPanel();updHint()})}
-function route(){const h=location.hash.slice(1);if(h==='editor'&&DB.current&&DB.projects.some(p=>p.id===DB.current))openEditor();else showProjects()}
+function route(){if(AUTH_ON()&&!loggedIn()){showAuth();return}const h=location.hash.slice(1);if(h==='editor'&&DB.current&&DB.projects.some(p=>p.id===DB.current))openEditor();else showProjects()}
 window.addEventListener('hashchange',route);
 /* ===== wiring ===== */
 $('#pname').addEventListener('input',e=>{P.name=e.target.value.trim()||'Лоиҳа';schedSave()});
@@ -1350,12 +1367,54 @@ $('#fl-add').addEventListener('click',()=>{P.floors.push('Ошёнаи '+(P.floo
 $('#fl-dup').addEventListener('click',()=>{const src=FO().map(o=>{const c=JSON.parse(JSON.stringify(o));c.id=uid();return c});P.floors.push('Ошёнаи '+(P.floors.length+1));const n=P.floors.length-1;src.forEach(c=>{c.fl=n;objs.push(c)});gotoFloor(n);changed(true);toast('Нусхаи ошёна сохта шуд')});
 $('#fl-del').addEventListener('click',()=>{if(P.floors.length<2)return;const i=curFloor;openModal('<h2>Нест кардани ошёна?</h2><p style="margin:0">«'+esc(P.floors[i])+'» бо ҳамаи объектҳояш хориҷ карда мешавад.</p><div class="btns"><button class="btn danger" type="button" id="fl-ok">Нест кардан</button><button class="btn" type="button" data-close>Бекор</button></div>');
  $('#fl-ok').onclick=()=>{objs=objs.filter(o=>(o.fl||0)!==i);objs.forEach(o=>{if((o.fl||0)>i)o.fl=o.fl-1});P.floors.splice(i,1);closeModal();gotoFloor(Math.max(0,i-1));changed(true)}});
+
+/* ===== ҳисоби маҳаллӣ (бе сервер) ===== */
+const AK='oryo-acct',AS='oryo-sess';
+const AUTH_ON=()=>typeof STANDALONE!=='undefined'&&STANDALONE&&!!(window.crypto&&crypto.subtle);
+function getAcct(){try{return JSON.parse(localStorage.getItem(AK))}catch(e){return null}}
+function loggedIn(){try{return sessionStorage.getItem(AS)==='1'||localStorage.getItem(AS)==='1'}catch(e){return false}}
+const b64=u=>btoa(String.fromCharCode.apply(null,u));
+const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function hashPw(pw,saltB){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:unb64(saltB),iterations:150000,hash:'SHA-256'},k,256)))}
+const rndSalt=()=>b64(crypto.getRandomValues(new Uint8Array(16)));
+function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint8Array(12));let c='';r.forEach((v,i)=>{c+=A[v%A.length];if(i%4===3&&i<11)c+='-'});return c}
+let AMODE='new';
+function authSet(m){AMODE=m;const a=getAcct(),V=(id,on)=>{$(id).hidden=!on};
+ V('#au-l-email',m==='new'||m==='login');V('#au-l-code',m==='reset');V('#au-l-pw',true);V('#au-l-pw2',m==='new'||m==='reset');V('#au-l-rem',m==='login'||m==='new'||m==='reset');
+ $('#au-err').hidden=true;$('#au-pw').value='';$('#au-pw2').value='';$('#au-code').value='';
+ $('#au-pw').autocomplete=m==='login'?'current-password':'new-password';
+ $('#au-sub').textContent=m==='new'?'Ҳисоби нав созед':m==='login'?'Ба барнома ворид шавед':'Тағйири парол';
+ $('#au-pwl').textContent=m==='reset'?'Пароли нав':m==='new'?'Парол созед (камаш 6 аломат)':'Парол';
+ $('#au-go').textContent=m==='new'?'Сохтани ҳисоб':m==='login'?'Ворид шудан':'Нигоҳ доштани пароли нав';
+ const a1=$('#au-alt1'),a2=$('#au-alt2');a1.hidden=a2.hidden=false;
+ if(m==='login'){a1.textContent='Парол фаромӯш шуд';a1.dataset.m='reset';a2.hidden=true}
+ else if(m==='reset'){a1.textContent='Бозгашт';a1.dataset.m='login';a2.textContent='Рамз нест';a2.dataset.m='wipe'}
+ else{a1.hidden=true;a2.hidden=true}
+ if(a&&m==='login')$('#au-email').value=a.email||''}
+function showAuth(){$('#v-projects').hidden=true;$('#v-editor').hidden=true;$('#v-auth').hidden=false;authSet(getAcct()?'login':'new');document.title='ORYO'}
+function authErr(t){const e=$('#au-err');e.textContent=t;e.hidden=false}
+function authDone(rem){try{sessionStorage.setItem(AS,'1');if(rem)localStorage.setItem(AS,'1');else localStorage.removeItem(AS)}catch(e){}$('#v-auth').hidden=true;authInfo();route()}
+function authInfo(){const a=getAcct(),on=AUTH_ON()&&a;$('#sg-acc').hidden=!on;if(on)$('#acc-l').textContent=a.email}
+function showCode(code,rem){openModal('<h2>Рамзи барқарорӣ</h2><p style="margin:0">Ин рамзро ҳатман ҷое нависед ё скриншот гиред. Агар паролро фаромӯш кунед, танҳо бо ҳамин рамз онро иваз мекунед. Он дубора нишон дода намешавад.</p><p style="font:700 22px ui-monospace,monospace;letter-spacing:.06em;text-align:center;margin:12px 0;user-select:all">'+code+'</p><div class="btns"><button class="btn" type="button" id="rc-copy">Нусха кардан</button><button class="btn primary" type="button" id="rc-ok">Навишт, идома</button></div>');
+ $('#rc-copy').onclick=()=>{try{navigator.clipboard.writeText(code);toast('Нусха шуд')}catch(e){}};$('#rc-ok').onclick=()=>{closeModal();authDone(rem)}}
+$('#au-form').addEventListener('submit',async e=>{e.preventDefault();const em=$('#au-email').value.trim().toLowerCase(),pw=$('#au-pw').value,pw2=$('#au-pw2').value,rem=$('#au-rem').checked,a=getAcct();
+ try{
+ if(AMODE==='new'){if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return authErr('Почтаро дуруст нависед');if(pw.length<6)return authErr('Парол камаш 6 аломат');if(pw!==pw2)return authErr('Паролҳо мувофиқ нестанд');
+  const salt=rndSalt(),code=mkCode(),salt2=rndSalt();localStorage.setItem(AK,JSON.stringify({email:em,salt,hash:await hashPw(pw,salt),salt2,rhash:await hashPw(code.replace(/-/g,''),salt2)}));showCode(code,rem)}
+ else if(AMODE==='login'){if(!a)return authSet('new');if(em!==a.email)return authErr('Почта нодуруст аст');if(await hashPw(pw,a.salt)!==a.hash)return authErr('Парол нодуруст аст');authDone(rem)}
+ else if(AMODE==='reset'){const code=$('#au-code').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!a)return authSet('new');if(await hashPw(code,a.salt2)!==a.rhash)return authErr('Рамзи барқарорӣ нодуруст аст');if(pw.length<6)return authErr('Пароли нав камаш 6 аломат');if(pw!==pw2)return authErr('Паролҳо мувофиқ нестанд');
+  const salt=rndSalt();a.salt=salt;a.hash=await hashPw(pw,salt);localStorage.setItem(AK,JSON.stringify(a));toast('Парол иваз шуд');authDone(rem)}
+ }catch(err){authErr('Хатогӣ: '+(err&&err.message||err))}});
+$('#au-alt1').addEventListener('click',e=>authSet(e.currentTarget.dataset.m));
+$('#au-alt2').addEventListener('click',e=>{if(e.currentTarget.dataset.m!=='wipe')return;openModal('<h2>Ҳисобро тоза кардан?</h2><p style="margin:0">Почта ва парол нест мешаванд ва ҳисоби нав месозед. Лоиҳаҳо дар ин дастгоҳ мемонанд.</p><div class="btns"><button class="btn danger" type="button" id="wp-ok">Тоза кардан</button><button class="btn" type="button" data-close>Бекор</button></div>');$('#wp-ok').onclick=()=>{try{localStorage.removeItem(AK);localStorage.removeItem(AS);sessionStorage.removeItem(AS)}catch(e){}closeModal();authSet('new')}});
+$('#b-logout').addEventListener('click',()=>{try{localStorage.removeItem(AS);sessionStorage.removeItem(AS)}catch(e){}setOpen(false);document.body.classList.remove('hm-open');showAuth()});
+authInfo();
 initDB();
 if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=93;
+const APP_V=95;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
