@@ -1,6 +1,6 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад. */
-const VERSION = 'studio-rasm-v150';
+const VERSION = 'studio-rasm-v151';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {

@@ -846,7 +846,7 @@ const stp=(a,b,v,t)=>'<button type="button" class="fb" data-f="'+a+'" aria-label
 const fb=(k,t,x)=>'<button type="button" class="fb '+(x||'')+'" data-f="'+k+'" aria-label="'+t+'">'+fi(k)+'<small>'+t+'</small></button>';
 function selList(){return multi&&msel.size?objs.filter(o=>msel.has(o.id)):(curObj()?[curObj()]:[])}
 function renderBar(){const bar=$('#fbar');if(!bar)return;const L=selList(),o=curObj(),z=view.z;let selH='';
- let base='<span class="sm" style="display:contents">'+fb('undo','Бозгашт')+fb('redo','Такрор')+'<button type="button" class="fb" data-f="zo" aria-label="Хурд"><svg class="ic" viewBox="0 0 24 24"><path d="'+FI.zo+'"/></svg></button><span class="fz" id="fz">'+Math.round(z/.5*100)+'%</span><button type="button" class="fb" data-f="zi" aria-label="Калон"><svg class="ic" viewBox="0 0 24 24"><path d="'+FI.zi+'"/></svg></button>'+fb('fit','Ҳама')+'</span>',h='';
+ let base='<span class="sm" style="display:contents">'+fb('undo','Бозгашт')+fb('redo','Такрор')+'</span>',h='';
  const smode=tool!=='select'&&STYLE_TOOLS.includes(tool);
  if(smode){const dd=DEF[tool],wl=dd.l==='walls',cc=STY.color||dd.c,ws=STY.ws||'solid';
   selH='<span class="fz" style="min-width:auto;padding:0 10px;white-space:nowrap;font-family:inherit">Услуб</span><span class="fs"></span><span class="fcw">'+custPick('sty',cc)+Object.keys(CX).map(k=>'<button type="button" class="fc'+(cc===k?' on':'')+'" data-fs="'+k+'" aria-label="'+CN[k]+'"><i style="background:var(--c-'+k+')"></i></button>').join('')+'</span><span class="fs"></span>'
@@ -867,7 +867,7 @@ function renderBar(){const bar=$('#fbar');if(!bar)return;const L=selList(),o=cur
   if(multi&&msel.size>1)h+=fb('aL','Чап')+fb('aC','Марказ')+fb('aR','Рост')+fb('aT','Боло')+fb('aM','Миёна')+fb('aB','Поён')+(msel.size>2?fb('dH','Уфуқӣ')+fb('dV','Амудӣ'):'');
   if(!multi)h+=fb('multi','Якчанд');
   h+=fb('props','Хосиятҳо')+fb('del','Нест','dg');selH=h;h=h+'<span class="fs"></span>'+base}
- else if(!draft)h=base+'<span class="fs"></span>'+fb('paste','Гузоштан')+fb('multi','Якчанд');
+ else if(!draft)h=base+(typeof CLIP!=='undefined'&&CLIP.length?'<span class="fs"></span>'+fb('paste','Гузоштан'):'');
  else h=base;
  const desk=window.matchMedia('(min-width:900px)').matches,b2=$('#fbar2');
  const idle=!draft?fb('paste','Гузоштан')+fb('multi','Якчанд'):'',c2=desk?selH:'';b2.innerHTML=c2;b2.hidden=!c2;bar.hidden=desk;if(desk)h=''
@@ -1745,7 +1745,7 @@ if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=150;
+const APP_V=151;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
