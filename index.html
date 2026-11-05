@@ -218,6 +218,11 @@ button,summary{cursor:pointer}
 
 #fbar{position:absolute;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:13;display:flex;gap:2px;align-items:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:var(--raised);border:1px solid var(--line);border-radius:18px;padding:4px 6px;box-shadow:0 6px 22px var(--shadow);max-width:760px;margin:0 auto}
 #fbar::-webkit-scrollbar{display:none}
+#ur{position:absolute;left:10px;top:10px;z-index:13;display:flex;gap:6px}
+#ur button{width:36px;height:36px;padding:0;border:1px solid var(--line);background:var(--raised);color:var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px var(--shadow)}
+#ur button:active{background:var(--soft)}#ur button[disabled]{opacity:.35}#ur .ic{width:19px;height:19px}
+@media (min-width:900px){#ur{display:none}}
+@media (max-width:899px){#hint{top:54px!important}}
 #fbar .fb{flex:none;min-width:48px;height:48px;border:0;background:transparent;color:var(--ink);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 6px;font:inherit}
 #fbar .fb:active{background:var(--soft)}
 #fbar .fb.on{background:var(--soft)}
@@ -389,7 +394,7 @@ button,.tb,.sbtn{touch-action:manipulation}
   <nav class="tools" id="tools" aria-label="Инструментҳо"></nav>
 </div>
   <div class="work">
-    <main id="stage"><svg id="cv" role="img" aria-label="Майдони кашидани нақша"></svg><div id="hint" hidden></div><div id="fbar" role="toolbar" aria-label="Амалҳо"></div><div id="fbar2" role="toolbar" aria-label="Хосиятҳо" hidden></div><input id="tin" hidden aria-label="Матн"></main>
+    <main id="stage"><svg id="cv" role="img" aria-label="Майдони кашидани нақша"></svg><div id="hint" hidden></div><div id="ur" role="toolbar" aria-label="Бозгашт ва такрор"><button type="button" id="ur-u" aria-label="Бозгашт"></button><button type="button" id="ur-r" aria-label="Такрор"></button></div><div id="fbar" role="toolbar" aria-label="Амалҳо"></div><div id="fbar2" role="toolbar" aria-label="Хосиятҳо" hidden></div><input id="tin" hidden aria-label="Матн"></main>
     <aside id="panel" aria-label="Панел"></aside>
   </div>
   <div id="sbk" hidden></div>
@@ -700,7 +705,7 @@ function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTim
 /* ===== history and saving ===== */
 function pushHist(){hist=hist.slice(0,hi+1);hist.push(JSON.stringify(objs));if(hist.length>120)hist.shift();hi=hist.length-1;updUndo()}
 function updUndo(){$('#b-undo').disabled=hi<=0;$('#b-redo').disabled=hi>=hist.length-1}
-function undo(d){const n=hi+d;if(n<0||n>=hist.length)return;hi=n;objs=JSON.parse(hist[hi]);if(!objs.find(o=>o.id===sel))sel=null;draft=null;changed(false)}
+function undo(d){const n=hi+d;if(n<0||n>=hist.length)return;hi=n;objs=JSON.parse(hist[hi]);if(!objs.find(o=>o.id===sel))sel=null;draft=null;changed(false);updUndo()}
 const SNAPMAX=8;
 function takeSnap(label,force){const j=JSON.stringify(objs),L=(P.snaps=P.snaps||[]),last=L[L.length-1];if(!force&&last&&(last.o===j||Date.now()-last.t<6e5))return false;if(force&&last&&last.o===j&&last.f===JSON.stringify(P.floors))return false;L.push({t:Date.now(),n:label||'Худкор',o:j,f:JSON.stringify(P.floors),l:JSON.stringify(layers)});while(L.length>SNAPMAX){const i=L.findIndex(q=>q.n==='Худкор');L.splice(i<0?0:i,1)}return true}
 function histHTML(){const L=(P.snaps||[]).slice().reverse();return '<h2>Таърихи нусхаҳо</h2><p style="margin:0 0 8px;font-size:13px;color:var(--muted)">Нусхаҳо худкор (ҳар чанд дақиқа) ва бо тугмаи поён захира мешаванд. Ҳадди аксар '+SNAPMAX+' нусха нигоҳ дошта мешавад.</p><div class="btns" style="margin-bottom:8px"><button class="btn primary" type="button" data-hs="save">Нусхаи ҳозира</button></div>'+(L.length?L.map(q=>{const i=P.snaps.indexOf(q),d=new Date(q.t);let n=0;try{n=JSON.parse(q.o).length}catch(e){}return '<div class="row"><span>'+esc(q.n)+'<br><small style="color:var(--muted)">'+d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+n+' объект</small></span><button class="btn" type="button" data-hs="'+i+'">Барқарор</button></div>'}).join(''):'<p style="margin:0;font-size:14px">Нусха ҳоло нест.</p>')+'<div class="btns" style="margin-top:12px"><button class="btn" type="button" data-hs="close">Пӯшидан</button></div>'}
@@ -846,12 +851,12 @@ const stp=(a,b,v,t)=>'<button type="button" class="fb" data-f="'+a+'" aria-label
 const fb=(k,t,x)=>'<button type="button" class="fb '+(x||'')+'" data-f="'+k+'" aria-label="'+t+'">'+fi(k)+'<small>'+t+'</small></button>';
 function selList(){return multi&&msel.size?objs.filter(o=>msel.has(o.id)):(curObj()?[curObj()]:[])}
 function renderBar(){const bar=$('#fbar');if(!bar)return;const L=selList(),o=curObj(),z=view.z;let selH='';
- let base='<span class="sm" style="display:contents">'+fb('undo','Бозгашт')+fb('redo','Такрор')+'</span>',h='';
+ let base='',h='';
  const smode=tool!=='select'&&STYLE_TOOLS.includes(tool);
  if(smode){const dd=DEF[tool],wl=dd.l==='walls',cc=STY.color||dd.c,ws=STY.ws||'solid';
   selH='<span class="fz" style="min-width:auto;padding:0 10px;white-space:nowrap;font-family:inherit">Услуб</span><span class="fs"></span><span class="fcw">'+custPick('sty',cc)+Object.keys(CX).map(k=>'<button type="button" class="fc'+(cc===k?' on':'')+'" data-fs="'+k+'" aria-label="'+CN[k]+'"><i style="background:var(--c-'+k+')"></i></button>').join('')+'</span><span class="fs"></span>'
    +(wl?stp('sthm','sthp',(STY.th||15)+' см','Ғафсӣ')+stp('swhm','swhp',(STY.wh||270)+' см','Баландӣ')+fb('stws',ws==='solid'?'Пур':ws==='hatch'?'Штрих':'Холӣ'):stp('sswm','sswp',(STY.sw||dd.sw||2)+' px','Хат'))+fb('strs','Аслӣ');
-  h=selH+'<span class="fs"></span>'+base}
+  h=selH}
  else if(!draft&&L.length){h=(o&&(()=>{const m=measureOf(o),t=[m.l?fmtL(m.l):'',m.a?fmtA(m.a):''].filter(Boolean).join(' · ');return t?'<span class="fz" style="min-width:auto;padding:0 10px;white-space:nowrap">'+t+'</span><span class="fs"></span>':''})()||'')+fb('copy','Нусха')+fb('paste','Гузоштан')+fb('dup','Дубликат')+fb('col','Ранг',colOpen?'on':'');
   if(colOpen)h+=custPick('sel',L[0].color)+Object.keys(CX).map(k=>'<button type="button" class="fc'+(L.every(q=>q.color===k)?' on':'')+'" data-fc="'+k+'" aria-label="'+CN[k]+'"><i style="background:var(--c-'+k+')"></i></button>').join('');
   const D=L.filter(canDim);if(D.length)h+=fb('dim',D.every(dimOn)?'Пинҳон':'Андоза');
@@ -866,11 +871,11 @@ function renderBar(){const bar=$('#fbar');if(!bar)return;const L=selList(),o=cur
   if(o&&o.type==='poly'&&o.layer==='walls'&&o.closed&&o.pts.length>2)h+=fb('room','Ҳуҷра');
   if(multi&&msel.size>1)h+=fb('aL','Чап')+fb('aC','Марказ')+fb('aR','Рост')+fb('aT','Боло')+fb('aM','Миёна')+fb('aB','Поён')+(msel.size>2?fb('dH','Уфуқӣ')+fb('dV','Амудӣ'):'');
   if(!multi)h+=fb('multi','Якчанд');
-  h+=fb('props','Хосиятҳо')+fb('del','Нест','dg');selH=h;h=h+'<span class="fs"></span>'+base}
- else if(!draft)h=base+(typeof CLIP!=='undefined'&&CLIP.length?'<span class="fs"></span>'+fb('paste','Гузоштан'):'');
+  h+=fb('props','Хосиятҳо')+fb('del','Нест','dg');selH=h}
+ else if(!draft)h=(typeof CLIP!=='undefined'&&CLIP.length?fb('paste','Гузоштан'):'');
  else h=base;
  const desk=window.matchMedia('(min-width:900px)').matches,b2=$('#fbar2');
- const idle=!draft?fb('paste','Гузоштан')+fb('multi','Якчанд'):'',c2=desk?selH:'';b2.innerHTML=c2;b2.hidden=!c2;bar.hidden=desk;if(desk)h=''
+ const idle=!draft?fb('paste','Гузоштан')+fb('multi','Якчанд'):'',c2=desk?selH:'';b2.innerHTML=c2;b2.hidden=!c2;bar.hidden=desk||!h;if(desk)h=''
  const key=draft?'d':(multi?'m':(sel||''));const keep=bar.dataset.k===key?bar.scrollLeft:0;bar.dataset.k=key;bar.innerHTML=h;bar.scrollLeft=keep}
 $('#b-set').addEventListener('click',()=>setOpen(true));
 const FURC=[['Хокистарӣ','#8F959C'],['Сурх','#B4413A'],['Кабуд','#3F5E8C'],['Сабз','#5C7F58'],['Зарди ширӣ','#E3D3A8'],['Қаҳваранг','#6B4A33'],['Чарми сиёҳ','#2C2A29'],['Чарми қаҳваранг','#8A5A38'],['Чӯби равшан','#C9A877'],['Чӯби торик','#5A3B25'],['Сафед','#F1EFEA'],['Гулобӣ','#D79A9C']];
@@ -1012,6 +1017,8 @@ const fbClick=e=>{const c=e.target.closest('[data-fc]');if(c){selList().forEach(
  else if(f==='room')makeRoom(o);
  else if(f==='rot'){o.rot=((o.rot||0)+90)%360;if(o.at){const q=objs.find(w=>w.id===o.at.id);if(q){const n=q.pts.length;o.at.rr=((o.rot-segBase(q.pts[o.at.i],q.pts[(o.at.i+1)%n]))%360+360)%360}}changed(true)}
  else if(f==='sm'||f==='lg'){const k=f==='lg'?1.25:.8;if(o.w||o.hh){const S=SYM[o.kind],K=symK(o);o.w=Math.round(S.w*K[0]*k);o.hh=Math.round(S.h*K[1]*k)}else o.scale=Math.min(4,Math.max(.25,(o.scale||1)*k));changed(true)}};
+{const bu=$('#b-undo'),br=$('#b-redo'),uu=$('#ur-u'),rr=$('#ur-r');uu.innerHTML=fi('undo');rr.innerHTML=fi('redo');uu.onclick=()=>bu.click();rr.onclick=()=>br.click();
+ const sy=()=>{uu.disabled=bu.disabled;rr.disabled=br.disabled};sy();const mo=new MutationObserver(sy);mo.observe(bu,{attributes:true,attributeFilter:['disabled']});mo.observe(br,{attributes:true,attributeFilter:['disabled']})}
 $('#fbar').addEventListener('click',fbClick);$('#fbar2').addEventListener('click',fbClick);
 
 
@@ -1745,7 +1752,7 @@ if(location.hash==='#editor'&&!DB.current)location.hash='projects';
 route();
 document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){document.body.classList.toggle('hm-open');m.classList.toggle('on',document.body.classList.contains('hm-open'));m.setAttribute('aria-expanded',document.body.classList.contains('hm-open'));return}
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
-const APP_V=151;
+const APP_V=153;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#14110D;color:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif}#upd[hidden]{display:none}#upd span{flex:1}#upd button{border:0;border-radius:10px;background:#EF7530;color:#fff;font:700 15px system-ui,sans-serif;padding:10px 16px;min-height:44px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<span>Версияи нав омад</span><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 async function check(){try{const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=/const APP_V=(\d+)/.exec(t);if(m&&+m[1]>V)bar.hidden=false}catch(e){}}
