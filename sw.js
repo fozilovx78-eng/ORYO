@@ -1,6 +1,6 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад. */
-const VERSION = 'studio-rasm-v146';
+const VERSION = 'studio-rasm-v149';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -19,8 +19,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  const same=new URL(req.url).origin===location.origin;
+  const net=fetch(req);
+  const tmo=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),same?3500:6000));
   e.respondWith(
-    fetch(req)
+    Promise.race([net,tmo])
       .then((res) => {
         if (res && (res.ok || res.type === 'opaque')) {
           const copy = res.clone();
