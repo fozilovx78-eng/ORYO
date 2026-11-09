@@ -1,6 +1,6 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад. */
-const VERSION = 'studio-rasm-v169';
+const VERSION = 'studio-rasm-v501';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 /* Safari ҷавоби «redirected»-ро аз service worker рад мекунад (Response served by service worker has redirections).
@@ -26,6 +26,8 @@ self.addEventListener('activate', (e) => {
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((cs) => cs.forEach((c) => c.postMessage({ v: VERSION })))
   );
 });
 
@@ -34,6 +36,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  /* Санҷиши версия (?_=) ҳамеша аз шабака, на аз кэш */
+  if (/[?&]_=/.test(req.url)) return;
   const same = new URL(req.url).origin === location.origin;
   const store = async (res) => {
     if (res && (res.ok || res.type === 'opaque')) {
