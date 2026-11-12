@@ -1,6 +1,6 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад. */
-const VERSION = 'studio-rasm-v723';
+const VERSION = 'studio-rasm-v725';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 /* Safari ҷавоби «redirected»-ро аз service worker рад мекунад (Response served by service worker has redirections).
