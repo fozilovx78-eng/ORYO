@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fozilov.oryo",
+      "sha256_cert_fingerprints": [
+        "10:E9:A2:13:37:AE:1B:0B:0F:6E:C8:AA:A1:A1:A7:A2:CA:A3:1E:EA:7F:D4:1A:33:24:A3:F9:54:D1:DD:C3:1D"
+      ]
+    }
+  }
+]
