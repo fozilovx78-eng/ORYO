@@ -1,6 +1,6 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад. */
-const VERSION = 'studio-rasm-v792';
+const VERSION = 'studio-rasm-v797';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 /* Safari ҷавоби «redirected»-ро аз service worker рад мекунад (Response served by service worker has redirections).
@@ -16,7 +16,10 @@ self.addEventListener('install', (e) => {
     caches.open(VERSION)
       .then((c) => Promise.all(ASSETS.map((a) =>
         fetch(a, { cache: 'reload' }).then(clean).then((r) => (r && r.ok ? c.put(a, r) : null)).catch(() => {})
-      )))
+      ).concat([
+        /* PDF китобхона: пешакӣ нигоҳ медорем, то содироти PDF бе интернет ҳам кор кунад */
+        fetch('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', { mode: 'no-cors' }).then((r) => (r ? c.put('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', r) : null)).catch(() => {})
+      ])))
       .then(() => self.skipWaiting())
   );
 });
