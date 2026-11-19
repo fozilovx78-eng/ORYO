@@ -1266,7 +1266,7 @@ html:root body #v-projects .srow .psel{background-size:26px!important;stroke-wid
 #oryo-tour .otp{background:transparent;color:var(--muted)}#oryo-tour .otn{background:var(--accent);color:#fff}
 html body #modal .box.setfull .pvs>.pfrow.hlprow{order:11!important}
 html body #modal .box.setfull .pvs>.pfrow.chrow{order:12!important}
-#modal .box.chbox .chm{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:none;height:calc(100dvh - 262px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));padding:4px 2px}
+#modal .box.chbox .chm{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:none;height:calc(100dvh - 232px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));padding:4px 2px}
 #modal .box.chbox .chb{max-width:84%;padding:10px 14px;border-radius:18px;font-size:16px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
 #modal .box.chbox .chb.bot{align-self:flex-start;background:var(--raised);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:6px}
 #modal .box.chbox .chb.me{align-self:flex-end;background:var(--accent);color:#1b1208;border-bottom-right-radius:6px}
@@ -1274,7 +1274,7 @@ html body #modal .box.setfull .pvs>.pfrow.chrow{order:12!important}
 #modal .box.chbox .chf{display:flex;gap:8px;margin-top:8px}
 #modal .box.chbox .chf input{flex:1;min-width:0;height:48px;border-radius:24px;border:1px solid var(--line);background:var(--raised);color:var(--ink);font:500 16px var(--font);padding:0 18px!important;outline:0}
 #modal .box.chbox .chf input:focus{border-color:var(--accent)}
-#modal .box.chbox .chf button{flex:none;width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:#1b1208;display:flex;align-items:center;justify-content:center}
+#modal .box.chbox .chf button{flex:none;width:48px;height:48px;border-radius:16px;border:0;background:var(--accent);color:#1b1208;display:flex;align-items:center;justify-content:center}
 #modal .box.chbox .chc{display:flex;gap:8px;margin:0 0 8px;flex:none}
 #modal .box.chbox .chk{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--raised);color:var(--ink);font:700 13px var(--font);text-decoration:none}
 #modal .box.chbox .chk svg{flex:none;color:var(--accent)}
@@ -4473,7 +4473,7 @@ document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
 
 (function(){try{if(!window.IntersectionObserver)return;const d=document.createElement('div');d.setAttribute('aria-hidden','true');d.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;visibility:hidden;z-index:-1';document.body.appendChild(d);const t=[];for(let i=0;i<=100;i++)t.push(i/100);try{if(window.top!==window)document.documentElement.style.setProperty('--clipb','6px')}catch(x){document.documentElement.style.setProperty('--clipb','6px')}new IntersectionObserver(es=>{const e=es[es.length-1],r=e.boundingClientRect,i=e.intersectionRect;let c=0;if(i.height>0)c=Math.max(0,Math.round(r.bottom-i.bottom));if(c>400)c=0;let emb=false;try{emb=window.top!==window}catch(x){emb=true}if(emb&&c<6)c=6;document.documentElement.style.setProperty('--clipb',c+'px')},{threshold:t}).observe(d)}catch(e){}})();
-const APP_V=1007;
+const APP_V=1009;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:rgba(10,12,16,.94);color:#fff;font:600 18px system-ui,sans-serif;text-align:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}#upd[hidden]{display:none}#upd small{display:block;font:400 14px system-ui,sans-serif;opacity:.75;max-width:320px}#upd button{border:0;border-radius:12px;background:#EF7530;color:#fff;font:700 17px system-ui,sans-serif;padding:14px 28px;min-height:48px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<div>Версияи нав омад<small>Барои ворид шудан аввал барномаро нав кунед.</small></div><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 const nb=document.createElement('div');nb.id='upd-bar';nb.hidden=true;nb.setAttribute('role','status');nb.innerHTML='<span class="ub-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg></span><span class="ub-t"><b>Версияи нав омад</b><small>Барои истифода барномаро нав кунед</small></span><button type="button" id="upd-bar-go">Нав кардан</button><button type="button" id="upd-bar-x" aria-label="Пӯшидан">×</button>';document.body.appendChild(nb);
