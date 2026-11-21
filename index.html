@@ -1364,6 +1364,7 @@ html.lt:root body #pl-nav .pln.act:not(#np-open) svg{color:#121A22!important}
 #pn-ph .pph-p{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--muted);flex:0 0 110px}
 #pn-ph .pph-p select{height:46px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:0 10px;font:700 15px var(--font)}
 #pn-ph .pph-f #pph-s{flex:1}
+.ppsel{flex:0 0 76px;height:48px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:0 8px;font:700 15px var(--font)}
 html body #pl-nav .pln:focus-visible{outline:2px solid var(--accent)!important;outline-offset:-2px!important}
 
 
@@ -1842,11 +1843,11 @@ function fit(){const r=svg.getBoundingClientRect();let a=1e9,b=1e9,c=-1e9,d=-1e9
  setView({x:(r.width-(c-a)*z)/2-a*z,y:(r.height-(d-b)*z)/2-b*z,z:z})}
 /* ===== snapping ===== */
 let SNAPK=null,GUIDE=[];
-function snapPt(w,from,ex){let x=w[0],y=w[1];const z=view.z,tol=(window.matchMedia&&matchMedia('(pointer:coarse)').matches?6:5)/z;SNAPK=null;GUIDE=[];
+function snapPt(w,from,ex){let x=w[0],y=w[1];const z=view.z,cs=window.matchMedia&&matchMedia('(pointer:coarse)').matches,tol=(cs?15:10)/z,tmid=(cs?8:6)/z;SNAPK=null;GUIDE=[];
  if($('#o-snap').checked){let best=null,bd=tol;const vis=o=>(o.fl||0)===curFloor&&!(layers[o.layer]&&!layers[o.layer].vis);
-  objs.forEach(o=>{if(!vis(o)||o.img)return;if(ex&&ex.id===o.id&&ex.all)return;const sp=shapePts(o);sp.forEach((p,i)=>{if(ex&&ex.id===o.id&&ex.i===i)return;const d=dist(p,w);if(d<bd){bd=d;best=p}});if(o.type!=='sym'&&o.type!=='text'&&sp.length>1&&!(ex&&ex.id===o.id)){const n=sp.length,m=(o.closed||o.type==='rect'||o.type==='tri'||o.type==='area')?n:n-1;for(let i=0;i<m;i++){const a=sp[i],b=sp[(i+1)%n],p=[(a[0]+b[0])/2,(a[1]+b[1])/2],d=dist(p,w);if(d<bd){bd=d;best=p}}}});
+  objs.forEach(o=>{if(!vis(o)||o.img)return;if(ex&&ex.id===o.id&&ex.all)return;const sp=shapePts(o);sp.forEach((p,i)=>{if(ex&&ex.id===o.id&&ex.i===i)return;const d=dist(p,w);if(d<bd){bd=d;best=p}});if(o.type!=='sym'&&o.type!=='text'&&sp.length>1&&!(ex&&ex.id===o.id)){const n=sp.length,m=(o.closed||o.type==='rect'||o.type==='tri'||o.type==='area')?n:n-1;for(let i=0;i<m;i++){const a=sp[i],b=sp[(i+1)%n],p=[(a[0]+b[0])/2,(a[1]+b[1])/2],d=dist(p,w);if(d<bd&&d<tmid){bd=d;best=p}}}});
   if(best){SNAPK='pt';return [best[0],best[1]]}
-  let eb=null,ed=3/z;objs.forEach(o=>{if(!vis(o)||o.img||o.type!=='poly'||o.layer==='openings'||(ex&&ex.id===o.id))return;const n=o.pts.length,m=o.closed?n:n-1;for(let i=0;i<m;i++){const a=o.pts[i],b=o.pts[(i+1)%n],dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;if(!l2)continue;const u=Math.max(0,Math.min(1,((w[0]-a[0])*dx+(w[1]-a[1])*dy)/l2)),q=[a[0]+u*dx,a[1]+u*dy],d=dist(q,w);if(d<ed){ed=d;eb=q}}});
+  let eb=null,ed=(cs?13:9)/z;objs.forEach(o=>{if(!vis(o)||o.img||o.type!=='poly'||o.layer==='openings'||(ex&&ex.id===o.id))return;const n=o.pts.length,m=o.closed?n:n-1;for(let i=0;i<m;i++){const a=o.pts[i],b=o.pts[(i+1)%n],dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;if(!l2)continue;const u=Math.max(0,Math.min(1,((w[0]-a[0])*dx+(w[1]-a[1])*dy)/l2)),q=[a[0]+u*dx,a[1]+u*dy],d=dist(q,w);if(d<ed){ed=d;eb=q}}});
   if(eb){SNAPK='edge';return [Math.round(eb[0]*10)/10,Math.round(eb[1]*10)/10]}}
  let lx=false,ly=false;
  if(from&&$('#o-ortho').checked){const t=3/z,dx=Math.abs(x-from[0]),dy=Math.abs(y-from[1]);if(dx<t&&dy>=t){x=from[0];lx=true}else if(dy<t&&dx>=t){y=from[1];ly=true}}
@@ -4596,7 +4597,7 @@ function pdfInk(sv){const M={'#cfe3ff':'#1f3a5f','#e6f0ff':'#16233b','#ffffff':'
 function pdfImg(svg){return new Promise((res,rej)=>{const vb=svg.getAttribute('viewBox').split(/\s+/).map(Number),k=8;let sv=new XMLSerializer().serializeToString(svg);
  sv=pdfInk(sv).replace(/<svg /,'<svg width="'+vb[2]*k+'" height="'+vb[3]*k+'" ');const im=new Image();im.onload=()=>res([im,vb[2]/vb[3]]);im.onerror=()=>rej(new Error('svg'));im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(sv)})}
 function pdfJpeg(d){return pdfImg(d.svg).then(([im,ar])=>new Promise((res,rej)=>{
- const W=2339,H=1654,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),F='ui-monospace,Menlo,Consolas,monospace',ink='#16233b',LN='rgba(31,58,95,.45)';
+ const fz=PPC[ppGet()]||1,W=2339,H=1654,cv=document.createElement('canvas');cv.width=Math.round(W*fz);cv.height=Math.round(H*fz);const x=cv.getContext('2d');x.scale(fz,fz);const F='ui-monospace,Menlo,Consolas,monospace',ink='#16233b',LN='rgba(31,58,95,.45)';
  const lang=LANG==='tg'?'tg-TJ':LANG==='en'?'en-US':'ru-RU',dt=new Date().toLocaleDateString(lang,{day:'numeric',month:'long',year:'numeric'});
  const L0=100,R0=W-100,FW=R0-L0;
  x.fillStyle='#ffffff';x.fillRect(0,0,W,H);x.fillStyle='#ff8a1f';x.fillRect(0,0,W,16);
@@ -4631,23 +4632,26 @@ function pdfJpeg(d){return pdfImg(d.svg).then(([im,ar])=>new Promise((res,rej)=>
  cv.toBlob(b=>{if(!b)return rej(new Error('blob'));b.arrayBuffer().then(a=>res(new Uint8Array(a)),rej)},'image/jpeg',.92)}))}
 (function(){const paint=r=>{r.querySelectorAll('svg.bp-s:not([data-p])').forEach(v=>{try{const t=document.createElement('div');t.innerHTML=pdfInk(v.outerHTML.replace('<svg ','<svg data-p="1" '));v.replaceWith(t.firstChild)}catch(e){}})};
  const m=document.getElementById('modal');if(!m)return;new MutationObserver(()=>paint(m)).observe(m,{childList:true,subtree:true});})();
-function pdfFromJpeg(j,w,h){const enc=s=>new TextEncoder().encode(s),parts=[],offs=[];let off=0;const add=u=>{parts.push(u);off+=u.length};
+const PPC={a5:.7071,a4:1,a3:1.4142};function ppGet(){try{const v=localStorage.getItem('oryo-pp');return PPC[v]?v:'a4'}catch(e){return 'a4'}}
+function pdfFromJpeg(j,w,h){const fz=w/2339,mw=(841.89*fz).toFixed(2),mh=(595.28*fz).toFixed(2),enc=s=>new TextEncoder().encode(s),parts=[],offs=[];let off=0;const add=u=>{parts.push(u);off+=u.length};
  add(enc('%PDF-1.4\n'));const obj=(n,s)=>{offs[n]=off;add(enc(n+' 0 obj\n'+s+'\nendobj\n'))};
  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
- obj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.89 595.28] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
+ obj(3,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+mw+' '+mh+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>');
  offs[4]=off;add(enc('4 0 obj\n<< /Type /XObject /Subtype /Image /Width '+w+' /Height '+h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+j.length+' >>\nstream\n'));add(j);add(enc('\nendstream\nendobj\n'));
- const c='q 841.89 0 0 595.28 0 0 cm /Im0 Do Q';obj(5,'<< /Length '+c.length+' >>\nstream\n'+c+'\nendstream');
+ const c='q '+mw+' 0 0 '+mh+' 0 0 cm /Im0 Do Q';obj(5,'<< /Length '+c.length+' >>\nstream\n'+c+'\nendstream');
  const xr=off;let t='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)t+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
  t+='trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';add(enc(t));
  let n=0;parts.forEach(p=>{n+=p.length});const o=new Uint8Array(n);let q=0;parts.forEach(p=>{o.set(p,q);q+=p.length});return o}
 let PDF_CACHE=null;
+(function(){const enh=r=>{r.querySelectorAll('[data-bpshare]:not([data-pps])').forEach(b=>{b.dataset.pps='1';if(b.previousElementSibling&&b.previousElementSibling.classList.contains('ppsel'))return;const s=document.createElement('select');s.className='ppsel';s.setAttribute('aria-label','Андозаи коғаз');s.innerHTML='<option value="a5">A5</option><option value="a4">A4</option><option value="a3">A3</option>';s.value=ppGet();s.onchange=()=>{try{localStorage.setItem('oryo-pp',s.value)}catch(e){}document.querySelectorAll('.ppsel').forEach(q=>{q.value=s.value})};b.parentNode.insertBefore(s,b)})};
+ const m=document.getElementById('modal');if(m)new MutationObserver(()=>enh(m)).observe(m,{childList:true,subtree:true});enh(document)})();
 async function pdfShare(file,btn){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'ORYO'});return}}catch(x){if(x&&x.name==='AbortError')return;if(x&&x.name==='NotAllowedError'){if(btn)btn.textContent=trs('📄 PDF тайёр: пахш кунед');return}}
  const u=URL.createObjectURL(file),a=document.createElement('a');a.href=u;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);toast(trs('PDF захира шуд'))}
 document.addEventListener('click',async e=>{const btn=e.target.closest('[data-bpshare]');if(!btn)return;const bp=document.querySelector('#modal .bp'),cd=bp?null:ccData();if(!bp&&!cd){toast(trs('Қувватро ворид кунед'));return}
- const sig=bp?bp.innerText:document.getElementById('cc-out').innerText;if(!btn.dataset.l0)btn.dataset.l0=btn.textContent;
+ const sig=(bp?bp.innerText:document.getElementById('cc-out').innerText)+'|'+ppGet();if(!btn.dataset.l0)btn.dataset.l0=btn.textContent;
  if(PDF_CACHE&&PDF_CACHE.sig===sig){pdfShare(PDF_CACHE.file,btn);return}
  btn.disabled=true;btn.textContent='⏳ PDF…';
- try{const d=bp?bpData(bp):cd,jpg=await pdfJpeg(d),bytes=pdfFromJpeg(jpg,2339,1654),file=new File([bytes],'ORYO-'+d.title.replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'')+'-'+new Date().toISOString().slice(0,10)+'.pdf',{type:'application/pdf'});PDF_CACHE={sig,file};btn.disabled=false;btn.textContent=btn.dataset.l0;await pdfShare(file,btn)}
+ try{const d=bp?bpData(bp):cd,jpg=await pdfJpeg(d),bytes=pdfFromJpeg(jpg,Math.round(2339*(PPC[ppGet()]||1)),Math.round(1654*(PPC[ppGet()]||1))),file=new File([bytes],'ORYO-'+d.title.replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'')+'-'+new Date().toISOString().slice(0,10)+'.pdf',{type:'application/pdf'});PDF_CACHE={sig,file};btn.disabled=false;btn.textContent=btn.dataset.l0;await pdfShare(file,btn)}
  catch(x){btn.disabled=false;btn.textContent=btn.dataset.l0;btShareText()}});
 
 
@@ -4722,7 +4726,7 @@ document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
 
 (function(){try{if(!window.IntersectionObserver)return;const d=document.createElement('div');d.setAttribute('aria-hidden','true');d.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;visibility:hidden;z-index:-1';document.body.appendChild(d);const t=[];for(let i=0;i<=100;i++)t.push(i/100);try{if(window.top!==window)document.documentElement.style.setProperty('--clipb','6px')}catch(x){document.documentElement.style.setProperty('--clipb','6px')}new IntersectionObserver(es=>{const e=es[es.length-1],r=e.boundingClientRect,i=e.intersectionRect;let c=0;if(i.height>0)c=Math.max(0,Math.round(r.bottom-i.bottom));if(c>400)c=0;let emb=false;try{emb=window.top!==window}catch(x){emb=true}if(emb&&c<6)c=6;document.documentElement.style.setProperty('--clipb',c+'px')},{threshold:t}).observe(d)}catch(e){}})();
-const APP_V=1076;
+const APP_V=1078;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:rgba(10,12,16,.94);color:#fff;font:600 18px system-ui,sans-serif;text-align:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}#upd[hidden]{display:none}#upd small{display:block;font:400 14px system-ui,sans-serif;opacity:.75;max-width:320px}#upd button{border:0;border-radius:12px;background:#EF7530;color:#fff;font:700 17px system-ui,sans-serif;padding:14px 28px;min-height:48px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<div>Версияи нав омад<small>Барои ворид шудан аввал барномаро нав кунед.</small></div><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 const nb=document.createElement('div');nb.id='upd-bar';nb.hidden=true;nb.setAttribute('role','status');nb.innerHTML='<span class="ub-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg></span><span class="ub-t"><b>Версияи нав омад</b><small>Барои истифода барномаро нав кунед</small></span><button type="button" id="upd-bar-go">Нав кардан</button><button type="button" id="upd-bar-x" aria-label="Пӯшидан">×</button>';document.body.appendChild(nb);
