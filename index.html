@@ -1603,8 +1603,44 @@ setLang(LANG);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const KEY='studio-rasm-v1';
 let mem=null;
+/* ===== захираи дуюм: IndexedDB (нусхаи эҳтиётӣ + барқарорсозӣ) ===== */
+let FRESHDB=false;
+const IDBM=(()=>{const N='oryo-db',S='kv',K='main';let dp=null,ready=false,pend=null,tm=0,bad=false;
+ const op=()=>dp||(dp=new Promise((res,rej)=>{try{if(!window.indexedDB)throw new Error('noidb');const q=window.indexedDB.open(N,1);q.onupgradeneeded=()=>{try{q.result.createObjectStore(S)}catch(e){}};q.onsuccess=()=>{const d=q.result;d.onversionchange=()=>{try{d.close()}catch(e){}dp=null};d.onclose=()=>{dp=null};res(d)};q.onerror=()=>rej(q.error||new Error('idb'));q.onblocked=()=>rej(new Error('blocked'))}catch(e){rej(e)}}).catch(e=>{dp=null;throw e}));
+ const tx=(mode,fn)=>op().then(d=>new Promise((res,rej)=>{let t,rq;try{t=d.transaction(S,mode);rq=fn(t.objectStore(S))}catch(e){rej(e);return}t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('abort'))}));
+ const flush=()=>{tm=0;if(!pend||!ready)return;const v=pend;pend=null;tx('readwrite',st=>st.put(v,K)).then(()=>{bad=false}).catch(()=>{bad=true;if(IDBM.lsOk===false)idbFailMsg()})};
+ return{get:()=>tx('readonly',st=>st.get(K)),has:()=>!!window.indexedDB,bad:()=>bad,pending:()=>!!pend,lsOk:true,
+  put(j,ts){pend={j,ts};if(!ready)return;clearTimeout(tm);tm=setTimeout(flush,500)},
+  now(){clearTimeout(tm);flush()},start(){ready=true;if(pend)flush()}}})();
+function idbFailMsg(){try{const e=document.getElementById('st-save');if(e)e.textContent='Захира нашуд (хотира пур)';toast('Захира нашуд: хотира пур аст')}catch(x){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')IDBM.now()});
+window.addEventListener('pagehide',()=>IDBM.now());
 function loadDB(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return mem}
-function saveDB(db){mem=db;try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}}
+function saveDB(db){mem=db;let j,ok=false;try{j=JSON.stringify(db)}catch(e){return false}const ts=Date.now();
+ try{localStorage.setItem(KEY,j);try{localStorage.setItem(KEY+'-ts',String(ts))}catch(e){}ok=true}catch(e){}
+ IDBM.lsOk=ok;if(IDBM.has())IDBM.put(j,ts);
+ if(!ok&&IDBM.has()&&!IDBM.bad()){if(!IDBM.warned){IDBM.warned=1;try{toast('Хотираи браузер пур аст: лоиҳа дар захираи эҳтиётӣ нигоҳ дошта шуд. Нусхаи эҳтиётӣ гиред.')}catch(e){}}return true}
+ return ok}
+async function idbRecover(){
+ try{if(sessionStorage.getItem('oryo-idb-msg')){sessionStorage.removeItem('oryo-idb-msg');toast('Лоиҳаҳо аз захираи эҳтиётӣ барқарор шуданд')}}catch(e){}
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
+ let r=null;
+ try{if(IDBM.has())r=await IDBM.get()}catch(e){IDBM.start();return}
+ try{
+  let lts=0,raw=null;try{lts=+(localStorage.getItem(KEY+'-ts')||0);raw=localStorage.getItem(KEY)}catch(e){}
+  if(r&&r.j){
+   let idb=null;try{idb=JSON.parse(r.j)}catch(e){}
+   const has=!!(idb&&Array.isArray(idb.projects)&&idb.projects.length>0);
+   let tried=false;try{tried=sessionStorage.getItem('oryo-idb-r')===String(r.ts)}catch(e){}
+   if(has&&!tried&&(FRESHDB||r.ts>lts+1500)){
+    try{sessionStorage.setItem('oryo-idb-r',String(r.ts))}catch(e){}
+    let okw=false;try{localStorage.setItem(KEY,r.j);localStorage.setItem(KEY+'-ts',String(r.ts));okw=true}catch(e){}
+    if(okw){try{sessionStorage.setItem('oryo-idb-msg','1')}catch(e){}location.reload();return}
+    toast('Хотира пур аст: нусхаи нави лоиҳа дар захираи эҳтиётӣ мондааст. Фазо холӣ кунед ва барномаро аз нав кушоед.');return}
+   if(raw&&lts>r.ts+1500&&!IDBM.pending())IDBM.put(raw,lts)
+  }else if(raw&&!IDBM.pending()){IDBM.put(raw,lts||Date.now())}
+ }catch(e){}
+ IDBM.start()}
 const CX={ink:'#1E1A14',accent:'#EF7530',blue:'#1F5FBF',green:'#2E7D4F',red:'#C0392B',yellow:'#E0A800',lime:'#7CB518',teal:'#13908A',sky:'#1E9BD7',purple:'#7B3FBF',pink:'#D6336C',brown:'#8A5A33',gray:'#7A8591',navy:'#1F2A6B'};
 const CN={ink:'Сиёҳ',accent:'Норанҷӣ',blue:'Кабуд',green:'Сабз',red:'Сурх',yellow:'Зард',lime:'Сабзи равшан',teal:'Фирӯзаранг',sky:'Осмонӣ',purple:'Бунафш',pink:'Гулобӣ',brown:'Қаҳваранг',gray:'Хокистарӣ',navy:'Кабуди тира'};
 const LAYERS=[{id:'img',name:'Расмҳо'},{id:'fills',name:'Рангҳои ҳуҷра'},{id:'walls',name:'Деворҳо'},{id:'openings',name:'Дарҳо ва тирезаҳо'},{id:'furniture',name:'Мебел'},{id:'electric',name:'Барқ'},{id:'dims',name:'Андозаҳо'},{id:'text',name:'Матн'},{id:'shapes',name:'Шаклҳо'}];
@@ -2135,9 +2171,10 @@ const curOpts=cur=>{const li=LANG==='ru'?2:LANG==='en'?3:1;let o=CURS.map(c=>'<o
 function openEst(){const R=estRows();const num=v=>(Math.round(v*100)/100).toString();
  let h='<div class="fh"><button type="button" class="fb" data-close aria-label="Бозгашт"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Смета</h2></div><p style="margin:0;font-size:13px;color:var(--muted)">Нархи як воҳидро ворид кунед: маблағ худкор ҳисоб мешавад.</p><div class="est"><div class="eh"><span>Номгӯй</span><span>Шумора</span><span>Нарх</span><span>Маблағ</span></div>';
  R.rows.forEach(r=>{const v=+R.pr[r[0]]||0;h+='<div class="er"><span class="en">'+esc(r[1])+'</span><span class="eq">'+num(r[2])+' '+r[3]+'</span><input class="ep" inputmode="decimal" data-ek="'+r[0]+'" value="'+(v||'')+'" placeholder="0"><b class="es" data-es="'+r[0]+'">'+num(r[2]*v)+'</b></div>'});
- h+='</div><div class="et"><span>Ҷамъ</span><b id="est-t">'+num(estTotal(R))+'</b><select id="est-cur" class="ep cur" aria-label="Асъор">'+curOpts(R.E.cur)+'</select></div><div id="ex-img"></div><div class="btns"><button class="btn primary" type="button" id="est-pdf">PDF</button><button class="btn" type="button" data-close>Пӯшидан</button></div>';
+ h+='</div><div class="et"><span>Ҷамъ</span><b id="est-t">'+num(estTotal(R))+'</b><select id="est-cur" class="ep cur" aria-label="Асъор">'+curOpts(R.E.cur)+'</select></div><div id="ex-img"></div><div class="btns"><button class="btn primary" type="button" id="est-pdf">PDF</button><button class="btn" type="button" id="est-csv">CSV</button><button class="btn" type="button" data-close>Пӯшидан</button></div>';
  openModal(h);const box=$('#modal .box');box.classList.add('wide','full');$('#modal').classList.add('fullm');
  box.oninput=e=>{const t=e.target;if(t.id==='est-cur'){R.E.cur=t.value;saveDB(DB);return}const k=t.dataset&&t.dataset.ek;if(!k)return;const v=parseFloat(String(t.value).replace(',','.'))||0;if(v)R.pr[k]=v;else delete R.pr[k];const r=R.rows.find(x=>x[0]===k);box.querySelector('[data-es="'+k+'"]').textContent=num(r[2]*v);$('#est-t').textContent=num(estTotal(R));saveDB(DB)};
+ $('#est-csv').onclick=async()=>{try{if(!(await saveFile(slug()+'-smeta.csv',estCsv(R))))toast('Захираи файл дар ин намоиш дастгирӣ намешавад')}catch(x){toast('CSV сохта нашуд')}};
  $('#est-pdf').onclick=async()=>{const J=await getJ();const rows=R.rows.filter(r=>r[2]>0);const W=900,rh=44,H=170+rows.length*rh+90;let g='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><rect width="'+W+'" height="'+H+'" fill="#fff"/><g font-family="Noto Sans,Arial,sans-serif" fill="#1E1A14"><text x="40" y="70" font-size="34" font-weight="700">'+esc(P.name)+'</text><text x="40" y="104" font-size="18" fill="#566474">'+esc(trs('Смета'))+' · '+esc(new Date().toLocaleDateString(LANG==='en'?'en-GB':'ru-RU'))+' · ORYO</text><line x1="40" y1="128" x2="'+(W-40)+'" y2="128" stroke="#1E1A14" stroke-width="2"/>';
   let y=128;rows.forEach(r=>{y+=rh;const v=+R.pr[r[0]]||0;g+='<text x="40" y="'+(y-14)+'" font-size="20">'+esc(r[1])+'</text><text x="560" y="'+(y-14)+'" font-size="20" text-anchor="end">'+num(r[2])+' '+r[3]+'</text><text x="700" y="'+(y-14)+'" font-size="20" text-anchor="end" fill="#566474">'+(v?num(v):'')+'</text><text x="'+(W-40)+'" y="'+(y-14)+'" font-size="20" text-anchor="end" font-weight="600">'+num(r[2]*v)+'</text><line x1="40" y1="'+y+'" x2="'+(W-40)+'" y2="'+y+'" stroke="#d5dae0"/>'});
   g+='<text x="40" y="'+(y+54)+'" font-size="26" font-weight="700">'+esc(trs('Ҷамъ'))+'</text><text x="'+(W-40)+'" y="'+(y+54)+'" font-size="26" font-weight="700" text-anchor="end">'+num(estTotal(R))+' '+esc(R.E.cur)+'</text></g></svg>';
@@ -4088,11 +4125,79 @@ function openPromo(){const B=brandLoad();
  $('#pm-file').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(im.width,im.height));c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);B.logo=c.toDataURL('image/png');upd()};im.onerror=()=>toast('Расм хонда нашуд');im.src=fr.result};fr.readAsDataURL(f)};
  $('#pm-save').onclick=async()=>{try{upd();const e=promoSvg(B),bl=await pngBlob({svg:e.svg,w:e.w*2,h:e.h*2});if(!(await saveFile(slug()+'-reklama.png',bl))){const u=URL.createObjectURL(bl);prev.src=u;toast('Тасвирро нигоҳ дошта захира кунед')}}catch(x){toast('Тасвир сохта нашуд')}};
  upd()}
+/* ===== содироти DXF (R12, миллиметр) ва CSV-и смета ===== */
+function dxfArc(x1,y1,rx,ry,phi,fa,fs,x2,y2){
+ if(x1===x2&&y1===y2)return [];rx=Math.abs(rx);ry=Math.abs(ry);if(!rx||!ry)return [[x2,y2]];
+ const p=phi*Math.PI/180,cp=Math.cos(p),sp=Math.sin(p),dx=(x1-x2)/2,dy=(y1-y2)/2,x1p=cp*dx+sp*dy,y1p=-sp*dx+cp*dy;
+ const lam=x1p*x1p/(rx*rx)+y1p*y1p/(ry*ry);if(lam>1){const s=Math.sqrt(lam);rx*=s;ry*=s}
+ const num=rx*rx*ry*ry-rx*rx*y1p*y1p-ry*ry*x1p*x1p,den=rx*rx*y1p*y1p+ry*ry*x1p*x1p;
+ let co=Math.sqrt(Math.max(0,num/den));if(!!fa===!!fs)co=-co;
+ const cxp=co*rx*y1p/ry,cyp=-co*ry*x1p/rx,cx=cp*cxp-sp*cyp+(x1+x2)/2,cy=sp*cxp+cp*cyp+(y1+y2)/2;
+ const ang=(ux,uy,vx,vy)=>Math.atan2(ux*vy-uy*vx,ux*vx+uy*vy);
+ const t1=ang(1,0,(x1p-cxp)/rx,(y1p-cyp)/ry);let dt=ang((x1p-cxp)/rx,(y1p-cyp)/ry,(-x1p-cxp)/rx,(-y1p-cyp)/ry);
+ if(!fs&&dt>0)dt-=2*Math.PI;else if(fs&&dt<0)dt+=2*Math.PI;
+ const n=Math.max(2,Math.ceil(Math.abs(dt)/(Math.PI/18))),o=[];
+ for(let k=1;k<=n;k++){const t=t1+dt*k/n,ex=rx*Math.cos(t),ey=ry*Math.sin(t);o.push([cp*ex-sp*ey+cx,sp*ex+cp*ey+cy])}
+ o[o.length-1]=[x2,y2];return o}
+function dxfFlat(d){
+ const out=[];let cur=null,x=0,y=0,sx=0,sy=0,lq=null,cmd='';
+ const tk=String(d).match(/[A-Za-z]|-?(?:\d+\.?\d*|\.\d+)/g)||[];let i=0;
+ const nm=()=>parseFloat(tk[i++]);
+ const go=(a,b)=>{if(!cur){cur={p:[[x,y]],c:false};out.push(cur)}cur.p.push([a,b]);x=a;y=b};
+ while(i<tk.length){
+  if(/[A-Za-z]/.test(tk[i]))cmd=tk[i++];else if(!cmd){i++;continue}
+  const rl=cmd>='a',C=cmd.toUpperCase();
+  if(C==='Z'){if(cur)cur.c=true;cur=null;x=sx;y=sy;cmd='';lq=null;continue}
+  if(C==='M'){let a=nm(),b=nm();if(rl){a+=x;b+=y}x=a;y=b;sx=a;sy=b;cur={p:[[a,b]],c:false};out.push(cur);cmd=rl?'l':'L';lq=null;continue}
+  if(C==='L'){let a=nm(),b=nm();if(rl){a+=x;b+=y}go(a,b);lq=null;continue}
+  if(C==='H'){let a=nm();if(rl)a+=x;go(a,y);lq=null;continue}
+  if(C==='V'){let b=nm();if(rl)b+=y;go(x,b);lq=null;continue}
+  if(C==='A'){const rx=nm(),ry=nm(),ph=nm(),fa=nm(),fs=nm();let a=nm(),b=nm();if(rl){a+=x;b+=y}dxfArc(x,y,rx,ry,ph,fa,fs,a,b).forEach(q=>go(q[0],q[1]));lq=null;continue}
+  if(C==='C'){let a=nm(),b=nm(),c2=nm(),d2=nm(),e=nm(),f=nm();if(rl){a+=x;b+=y;c2+=x;d2+=y;e+=x;f+=y}const x0=x,y0=y;for(let t=1;t<=10;t++){const u=t/10,v=1-u;go(v*v*v*x0+3*v*v*u*a+3*v*u*u*c2+u*u*u*e,v*v*v*y0+3*v*v*u*b+3*v*u*u*d2+u*u*u*f)}lq=null;continue}
+  if(C==='Q'||C==='T'){let qx,qy;if(C==='Q'){qx=nm();qy=nm();if(rl){qx+=x;qy+=y}}else{qx=lq?2*x-lq[0]:x;qy=lq?2*y-lq[1]:y}let e=nm(),f=nm();if(rl){e+=x;f+=y}const x0=x,y0=y;for(let t=1;t<=8;t++){const u=t/8,v=1-u;go(v*v*x0+2*v*u*qx+u*u*e,v*v*y0+2*v*u*qy+u*u*f)}lq=[qx,qy];continue}
+  i++}
+ return out}
+function buildDxf(list){
+ const L=[],used={},w=(c,v)=>{L.push(String(c),String(v))};
+ const n=v=>{const t=Math.round(v*1000)/1000;return String(Object.is(t,-0)?0:t)},X=p=>n(p[0]*10),Y=p=>n(-p[1]*10);
+ const ly=o=>{const k=(o&&typeof o.layer==='string'&&/^[A-Za-z0-9_]+$/.test(o.layer))?o.layer:'0';used[k]=1;return k};
+ const tx=s=>String(s==null?'':s).replace(/[\r\n]+/g,' ').replace(/%/g,'%%%').replace(/[^\x20-\x7e]/g,c=>'\\U+'+c.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0'));
+ const line=(a,b,k)=>{w(0,'LINE');w(8,k);w(10,X(a));w(20,Y(a));w(30,0);w(11,X(b));w(21,Y(b));w(31,0)};
+ const pl=(pts,cl,k,wd)=>{if(!pts||pts.length<2)return;w(0,'POLYLINE');w(8,k);w(66,1);w(10,0);w(20,0);w(30,0);w(70,cl?1:0);if(wd>0){w(40,n(wd*10));w(41,n(wd*10))}pts.forEach(p=>{w(0,'VERTEX');w(8,k);w(10,X(p));w(20,Y(p));w(30,0)});w(0,'SEQEND');w(8,k)};
+ const txt=(p,h,s,rot,k,ctr)=>{if(!String(s==null?'':s).length)return;w(0,'TEXT');w(8,k);w(10,X(p));w(20,Y(p));w(30,0);w(40,n(h*10));w(1,tx(s));if(rot)w(50,n(rot));if(ctr){w(72,1);w(73,0);w(11,X(p));w(21,Y(p));w(31,0)}};
+ list.forEach(o=>{try{
+  const k=ly(o),p=o.pts||[],t=o.type;
+  if(t==='fill'||(o.img&&t==='rect'))return;
+  if(t==='sym'){const S=SYM[o.kind];if(!S||!p[0])return;const K=symK(o),kx=K[0],ky=K[1],r=(o.rot||0)*Math.PI/180,cs=Math.cos(r),sn=Math.sin(r),mx=o.mx?-1:1,my=o.my?-1:1,cx=S.ox+S.w/2,cy=S.l==='openings'?0:S.oy+S.h/2,mir=!!(o.mx||o.my);
+   const tr=q=>{let a=q[0],b=q[1];if(mir){a=mx*(a-cx)+cx;b=my*(b-cy)+cy}a*=kx;b*=ky;return [p[0][0]+a*cs-b*sn,p[0][1]+a*sn+b*cs]};
+   [S.d,S.lf].forEach(d=>{if(d)dxfFlat(d).forEach(s=>pl(s.p.map(tr),s.c,k,0))});return}
+  if(t==='text'&&p[0]){const sz=o.size||24,r=(o.rot||0)*Math.PI/180;txt([p[0][0]-Math.sin(r)*sz*.36,p[0][1]+Math.cos(r)*sz*.36],sz*.72,o.text,-(o.rot||0),k);return}
+  if(t==='circle'&&p.length>1){w(0,'CIRCLE');w(8,k);w(10,X(p[0]));w(20,Y(p[0]));w(30,0);w(40,n(dist(p[0],p[1])*10));return}
+  if(t==='ellipse'&&p.length>1){const q=corners(o),cx=(q[0][0]+q[1][0])/2,cy=(q[1][1]+q[2][1])/2,rx=(q[1][0]-q[0][0])/2,ry=(q[2][1]-q[1][1])/2,a=[];for(let i=0;i<64;i++){const u=i/64*2*Math.PI;a.push([cx+rx*Math.cos(u),cy+ry*Math.sin(u)])}pl(a,true,k,0);return}
+  if((t==='rect'||t==='tri')&&p.length>1){pl(shapePts(o),true,k,0);return}
+  if(t==='dim'&&p.length>1){line(p[0],p[1],k);const d=dist(p[0],p[1]);if(d>0){const ux=(p[1][0]-p[0][0])/d,uy=(p[1][1]-p[0][1])/d;[p[0],p[1]].forEach(e=>line([e[0]+uy*8,e[1]-ux*8],[e[0]-uy*8,e[1]+ux*8],k));let a=-Math.atan2(p[1][1]-p[0][1],p[1][0]-p[0][0])*180/Math.PI;if(a>90)a-=180;else if(a<-90)a+=180;txt([(p[0][0]+p[1][0])/2-uy*14,(p[0][1]+p[1][1])/2+ux*14],10,fmtL(d),a,k,true)}return}
+  if(t==='arrow'&&p.length>1){line(p[0],p[1],k);const d=dist(p[0],p[1]);if(d>0){const a=Math.atan2(p[1][1]-p[0][1],p[1][0]-p[0][0]),h=Math.min(25,d/3);[.45,-.45].forEach(s=>line(p[1],[p[1][0]-h*Math.cos(a+s),p[1][1]-h*Math.sin(a+s)],k))}return}
+  if(t==='angle'&&p.length>2){line(p[1],p[0],k);line(p[1],p[2],k);const a1=Math.atan2(p[0][1]-p[1][1],p[0][0]-p[1][0]),a2=Math.atan2(p[2][1]-p[1][1],p[2][0]-p[1][0]);let df=a2-a1;while(df>Math.PI)df-=2*Math.PI;while(df<-Math.PI)df+=2*Math.PI;const m=a1+df/2;txt([p[1][0]+56*Math.cos(m),p[1][1]+56*Math.sin(m)],10,Math.round(Math.abs(df)*180/Math.PI)+'°',0,k,true);return}
+  if(t==='area'&&p.length>2){pl(p,true,k,0);const cx=p.reduce((s,q)=>s+q[0],0)/p.length,cy=p.reduce((s,q)=>s+q[1],0)/p.length;txt([cx,cy],12,(o.name?o.name+' ':'')+fmtA(area2(p)),0,k,true);return}
+  if(p.length>1)pl(p,!!o.closed,k,(t==='poly'&&o.layer==='walls')?(o.th||15):0)
+ }catch(e){}});
+ const LC={img:8,fills:8,walls:7,openings:3,furniture:5,electric:1,dims:4,text:7,shapes:6},names=Object.keys(used);if(!names.length)names.push('0');
+ const T=['0','SECTION','2','TABLES','0','TABLE','2','LTYPE','70','1','0','LTYPE','2','CONTINUOUS','70','0','3','Solid line','72','65','73','0','40','0.0','0','ENDTAB',
+  '0','TABLE','2','LAYER','70',String(names.length)];
+ names.forEach(k=>T.push('0','LAYER','2',k,'70','0','62',String(LC[k]||7),'6','CONTINUOUS'));
+ T.push('0','ENDTAB','0','TABLE','2','STYLE','70','1','0','STYLE','2','STANDARD','70','0','40','0.0','41','1.0','50','0.0','71','0','42','2.5','3','txt','4','','0','ENDTAB','0','ENDSEC');
+ return ['0','SECTION','2','HEADER','9','$ACADVER','1','AC1009','0','ENDSEC'].concat(T,['0','SECTION','2','ENTITIES'],L,['0','ENDSEC','0','EOF']).join('\n')+'\n'}
+async function saveDxf(){try{const fo=objs.filter(o=>(o.fl||0)===curFloor&&!(layers[o.layer]&&!layers[o.layer].vis));if(!fo.length){toast('Дар ин ошёна объект нест');return}
+ if(!(await saveFile(slug()+'.dxf',buildDxf(fo))))toast('Захираи файл дар ин намоиш дастгирӣ намешавад')}catch(x){toast('DXF сохта нашуд')}}
+function estCsv(R){const en=LANG==='en',sep=en?',':';',dn=v=>{const t=(Math.round(v*100)/100).toString();return en?t:t.replace('.',',')},q=v=>{v=String(v==null?'':v);return /[";,\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ const rows=R.rows.filter(r=>r[2]>0),out=[[trs('Номгӯй','f'),trs('Воҳид','f'),trs('Шумора','f'),trs('Нарх','f'),trs('Маблағ','f')].map(q).join(sep)];
+ rows.forEach(r=>{const v=+R.pr[r[0]]||0;out.push([trs(r[1],'f'),trs(r[3],'f'),dn(r[2]),v?dn(v):'',dn(r[2]*v)].map(q).join(sep))});
+ out.push([trs('Ҷамъ','f'),'','','',dn(estTotal(R))+' '+R.E.cur].map(q).join(sep));return '\ufeff'+out.join('\r\n')+'\r\n'}
 function openExport(){let ex=mkEx0();
- openModal('<h2>Содир кардан</h2><div class="btns"><button class="btn primary" type="button" data-ex="png">Акс</button><button class="btn primary" type="button" data-ex="pdf">PDF</button><button class="btn" type="button" data-ex="promo">Реклама</button><button class="btn" type="button" data-ex="pdffull">📋 PDF-и пурра</button></div>'+(DL||STANDALONE?'':'<p style="margin:0;font-size:13px;color:var(--muted)">Захираи файл дар ин намоиш кор намекунад, аз ин рӯ матнро нусха кунед.</p>')+'<div class="pset"><label>Варақа<select id="ex-paper"><option value="a4">A4</option><option value="a3">A3</option></select></label><label>Миқёс<select id="ex-scale"><option value="fit">Худкор</option><option value="50">1 : 50</option><option value="100">1 : 100</option><option value="200">1 : 200</option><option value="500">1 : 500</option></select></label></div><label class="chk"><input type="checkbox" id="ex-stamp" checked>Ҷадвали ном</label><textarea id="ex-ta" readonly hidden aria-label="Матни содиршуда"></textarea><div id="ex-img"></div><div class="btns"><button class="btn" type="button" data-close>Пӯшидан</button></div>');
+ openModal('<h2>Содир кардан</h2><div class="btns"><button class="btn primary" type="button" data-ex="png">Акс</button><button class="btn primary" type="button" data-ex="pdf">PDF</button><button class="btn" type="button" data-ex="promo">Реклама</button><button class="btn" type="button" data-ex="pdffull">📋 PDF-и пурра</button><button class="btn" type="button" data-ex="dxf">DXF</button></div>'+(DL||STANDALONE?'':'<p style="margin:0;font-size:13px;color:var(--muted)">Захираи файл дар ин намоиш кор намекунад, аз ин рӯ матнро нусха кунед.</p>')+'<div class="pset"><label>Варақа<select id="ex-paper"><option value="a4">A4</option><option value="a3">A3</option></select></label><label>Миқёс<select id="ex-scale"><option value="fit">Худкор</option><option value="50">1 : 50</option><option value="100">1 : 100</option><option value="200">1 : 200</option><option value="500">1 : 500</option></select></label></div><label class="chk"><input type="checkbox" id="ex-stamp" checked>Ҷадвали ном</label><textarea id="ex-ta" readonly hidden aria-label="Матни содиршуда"></textarea><div id="ex-img"></div><div class="btns"><button class="btn" type="button" data-close>Пӯшидан</button></div>');
  const ta=$('#ex-ta');ta.value=ex.svg;let cur='svg';
  const txt=k=>k==='json'?JSON.stringify({app:'studio-rasm',v:1,name:P.name,floors:P.floors,objs:objs,layers:layers},null,1):ex.svg;
- $('#modal .box').onclick=async e=>{const b=e.target.closest('[data-ex]');if(!b)return;ex=mkEx();cur=b.dataset.ex;$('#ex-img').innerHTML='';if(cur==='promo'){openPromo();return}if(cur==='pdf'){await savePdf(ex);return}if(cur==='pdfall'){await savePdfAll();return}if(cur==='pdffull'){await savePdfFull();return}
+ $('#modal .box').onclick=async e=>{const b=e.target.closest('[data-ex]');if(!b)return;ex=mkEx();cur=b.dataset.ex;$('#ex-img').innerHTML='';if(cur==='promo'){openPromo();return}if(cur==='pdf'){await savePdf(ex);return}if(cur==='pdfall'){await savePdfAll();return}if(cur==='pdffull'){await savePdfFull();return}if(cur==='dxf'){await saveDxf();return}
   if(cur==='png'){try{const bl=await pngBlob(hq(ex,4000));if(!(await saveFile(slug()+'.png',bl))){const u=URL.createObjectURL(bl);$('#ex-img').innerHTML='<img alt="Нақша" src="'+u+'" style="width:100%;border:1px solid var(--line);border-radius:8px">';toast('Тасвирро нигоҳ дошта захира кунед')}}catch(x){toast('PNG сохта нашуд')}return}
   ta.value=txt(cur);await saveFile(slug()+'.'+cur,txt(cur))};
  {const ps=$('#ex-paper'),sc=$('#ex-scale');ps.value=exPaper;sc.value=exScale;ps.onchange=()=>{exPaper=ps.value};sc.onchange=()=>{exScale=sc.value}}
@@ -4142,7 +4247,7 @@ function seed(){const OUT=[[0,0],[970,0],[970,1062],[580,1062],[580,1310],[0,131
 function newProject(name,tpl,w,h){let o=[];if(TPLS[tpl]){const b=buildTpl(Object.assign({rm:TRM[tpl]},TPLS[tpl]));o=b.o;const sv=objs;objs=o;try{b.ops.forEach(linkOpening)}catch(e){}objs=sv;const p={id:uid(),name:name||trs(TPLS[tpl].n),updated:Date.now(),objs:o,layers:defLayers(),view:null};return p}if(tpl==='room'){const W=w*100,H=h*100;o.push(mk('wall',[[0,0],[W,0],[W,H],[0,H]],{closed:true,hatch:true}))}
  return {id:uid(),name:name||trs('Лоиҳаи нав'),updated:Date.now(),objs:o,layers:defLayers(),view:null}}
 function wallInkFix(){try{if(localStorage.getItem('oryo-wink-1'))return;if(STY.color){delete STY.color;saveSty()}if(DB&&Array.isArray(DB.projects)){DB.projects.forEach(p=>(p.objs||[]).forEach(o=>{if(o&&o.type==='poly'&&o.layer==='walls'&&o.color&&o.color!=='ink')o.color='ink'}));saveDB(DB)}localStorage.setItem('oryo-wink-1','1')}catch(e){}}
-function initDB(){DB=loadDB();wallInkFix();if(DB&&Array.isArray(DB.projects)&&DB.projects.some(p=>p.example&&p.v!==2)){const ns=seed();DB.projects=DB.projects.map(p=>p.example&&p.v!==2?Object.assign(ns,{}):p);saveDB(DB)}if(!DB||!Array.isArray(DB.projects)||!DB.projects.length){DB={projects:[seed()],current:null};saveDB(DB)}}
+function initDB(){DB=loadDB();wallInkFix();if(DB&&Array.isArray(DB.projects)&&DB.projects.some(p=>p.example&&p.v!==2)){const ns=seed();DB.projects=DB.projects.map(p=>p.example&&p.v!==2?Object.assign(ns,{}):p);saveDB(DB)}if(!DB||!Array.isArray(DB.projects)||!DB.projects.length){DB={projects:[seed()],current:null};FRESHDB=true;saveDB(DB)}}
 const cntW=(n,t)=>{if(LANG==='tg')return t==='d'?'дастгоҳ':'объект';if(LANG==='en')return t==='d'?(n===1?'device':'devices'):(n===1?'object':'objects');const m=n%10,c=n%100,f=m===1&&c!==11?0:(m>=2&&m<=4&&(c<12||c>14))?1:2;return t==='d'?['устройство','устройства','устройств'][f]:['объект','объекта','объектов'][f]};
 let curTag='',curKind='',curFav=false;const kindOf=p=>p.fire?'fire':p.kind==='panel'?'panel':'house';
 function renderTags(){const T=[...new Set(DB.projects.map(p=>p.tag).filter(Boolean))].sort((a,b)=>a.localeCompare(b));if(curTag&&!T.includes(curTag))curTag='';const tb=$('#tagbar');tb.hidden=!T.length;tb.innerHTML=T.length?'<button type="button" class="chip'+(curTag?'':' on')+'" data-tg="">Ҳама</button>'+T.map(t=>'<button type="button" class="chip'+(curTag===t?' on':'')+'" data-tg="'+esc(t)+'">'+esc(t)+'</button>').join(''):''}
@@ -4817,6 +4922,7 @@ $('#au-alt2').addEventListener('click',e=>{if(e.currentTarget.dataset.m==='new')
 $('#b-logout').addEventListener('click',()=>{try{localStorage.removeItem(AS);sessionStorage.removeItem(AS)}catch(e){}setOpen(false);document.body.classList.remove('hm-open');showAuth()});
 authInfo();
 initDB();
+idbRecover();
 /* ===== профил ===== */
 const PFK='oryo-profile';
 const pfGet=()=>{try{return JSON.parse(localStorage.getItem(PFK))||{}}catch(e){return {}}};
@@ -4851,7 +4957,7 @@ document.addEventListener('click',e=>{const m=e.target.closest('#b-menu');if(m){
  if(document.body.classList.contains('hm-open')){const inP=e.target.closest('.acts-top');if(inP&&e.target.closest('button')||!inP){document.body.classList.remove('hm-open');const mb=document.querySelector('#b-menu');if(mb){mb.classList.remove('on');mb.setAttribute('aria-expanded','false')}}}});
 
 (function(){try{if(!window.IntersectionObserver)return;const d=document.createElement('div');d.setAttribute('aria-hidden','true');d.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;visibility:hidden;z-index:-1';document.body.appendChild(d);const t=[];for(let i=0;i<=100;i++)t.push(i/100);try{if(window.top!==window)document.documentElement.style.setProperty('--clipb','6px')}catch(x){document.documentElement.style.setProperty('--clipb','6px')}new IntersectionObserver(es=>{const e=es[es.length-1],r=e.boundingClientRect,i=e.intersectionRect;let c=0;if(i.height>0)c=Math.max(0,Math.round(r.bottom-i.bottom));if(c>400)c=0;let emb=false;try{emb=window.top!==window}catch(x){emb=true}if(emb&&c<6)c=6;document.documentElement.style.setProperty('--clipb',c+'px')},{threshold:t}).observe(d)}catch(e){}})();
-const APP_V=1156;
+const APP_V=1157;
 (function(){const V=APP_V;const st=document.createElement('style');st.textContent='#upd{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:rgba(10,12,16,.94);color:#fff;font:600 18px system-ui,sans-serif;text-align:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}#upd[hidden]{display:none}#upd small{display:block;font:400 14px system-ui,sans-serif;opacity:.75;max-width:320px}#upd button{border:0;border-radius:12px;background:#EF7530;color:#fff;font:700 17px system-ui,sans-serif;padding:14px 28px;min-height:48px;cursor:pointer}';document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='upd';bar.hidden=true;bar.setAttribute('role','alert');bar.innerHTML='<div>Версияи нав омад<small>Барои ворид шудан аввал барномаро нав кунед.</small></div><button type="button" id="upd-go">Нав кардан</button>';document.body.appendChild(bar);
 const nb=document.createElement('div');nb.id='upd-bar';nb.hidden=true;nb.setAttribute('role','status');nb.innerHTML='<span class="ub-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2"/><path d="M18.5 2v4h-4M5.5 22v-4h4"/></svg></span><span class="ub-t"><b>Версияи нав омад</b><small>Барои истифода барномаро нав кунед</small></span><button type="button" id="upd-bar-go">Нав кардан</button><button type="button" id="upd-bar-x" aria-label="Пӯшидан">×</button>';document.body.appendChild(nb);

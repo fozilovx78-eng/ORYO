@@ -1,7 +1,7 @@
 /* Service worker: барномаро баъд аз боргирии аввал бе интернет ҳам мекушояд.
    Version-ро ҳангоми нав кардани файлҳо тағйир диҳед, то кэши кӯҳна тоза шавад.
    ВАЖНО: рақами версия бояд бо APP_V дар index.html баробар бошад. */
-const VERSION = 'studio-rasm-v1156';
+const VERSION = 'studio-rasm-v1157';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 
